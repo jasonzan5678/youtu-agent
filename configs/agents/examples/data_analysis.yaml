@@ -16,9 +16,11 @@ planner_config:
 reporter_model:
   model_provider:
     type: ${oc.env:UTU_LLM_TYPE}
-    model: ${oc.env:UTU_LLM_MODEL}
-    api_key: ${oc.env:UTU_LLM_API_KEY}
-    base_url: ${oc.env:UTU_LLM_BASE_URL}
+    model: deepseek-chat
+    api_key: sk-168dd388311743a7a93ccb973f67a76f
+    base_url: https://api.deepseek.com/v1
+  model_settings:
+    max_tokens: 8000
 
 workers_info:
   - name: SearchAgent
