@@ -1,6 +1,5 @@
 """
 - [ ] standardize parser?
-- [ ] only LLM config is needed!
 """
 
 import re
@@ -136,22 +135,15 @@ class PlannerAgent:
             logger.warning("No task status found in response. Defaulting to 'partial success'.")
             return "partial success"
 
-    async def reflect_on_failure(self, recorder: WorkspaceTaskRecorder) -> None:
+    async def reflect_on_failure(self, recorder: WorkspaceTaskRecorder, additional_context: str = None) -> None:
         """Reflect on the failure of the overall task and provide analysis."""
-        reflection_prompt = (
-            PROMPTS["TASK_REFLECTION_PROMPT"]
-            .strip()
-            .format(
-                question=recorder.overall_task,
-                task_results="\n\n".join(recorder.formatted_task_plan_list_with_task_results),
-            )
+        reflection_prompt = PROMPTS["TASK_REFLECTION_PROMPT"].format(
+            question=recorder.overall_task,
+            task_results="\n\n".join(recorder.formatted_task_plan_list_with_task_results),
         )
         reflection_recorder = await self.llm.run(reflection_prompt)
-        recorder.add_run_result(
-            reflection_recorder.get_run_result(), "planner_reflect_on_failure"
-        )  # add planner trajectory
-        failure_analysis = (
-            f"{reflection_recorder.final_output}\n\nAdditional Context: Self-check failed for tentative answer: "
-            f"'{recorder.tentative_answer}'. The answer may not follow the correct format or process requirements."
-        )
-        recorder.update_failure_info(failure_analysis)
+        recorder.add_run_result(reflection_recorder.get_run_result(), "planner_reflect_on_failure")  # add trajectory
+        reflection_result = reflection_recorder.final_output
+        if additional_context:
+            reflection_result += f"\n\n{additional_context}"
+        recorder.update_failure_info(reflection_result)

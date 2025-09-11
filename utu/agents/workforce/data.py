@@ -93,6 +93,12 @@ class WorkspaceTaskRecorder(TaskRecorder):
                 return task
         return "No uncompleted tasks."
 
+    @property
+    def has_failed_task(self) -> bool:
+        if self.task_plan is None:
+            return False
+        return any(task.task_status == "failed" for task in self.task_plan)
+
     # -----------------------------------------------------------
     def update_failure_info(self, failure_info: str) -> None:
         self.failure_info = failure_info
@@ -101,3 +107,17 @@ class WorkspaceTaskRecorder(TaskRecorder):
         self.tentative_answer = answer
         self.tentative_answer_confidence = confidence
         self.tentative_answer_uniqueness_assessment = uniqueness_assessment
+
+    def check_tentative_answer_quality(self) -> tuple[bool, str]:
+        answer_quality_acceptable = (
+            self.tentative_answer_confidence in ["high", "medium"]
+            and self.tentative_answer_uniqueness_assessment != "non-unique"
+        )
+        failure_reasons = []
+        if not answer_quality_acceptable:
+            if self.tentative_answer_confidence == "low":
+                failure_reasons.append(f"low confidence ({self.tentative_answer_confidence})")
+            if self.tentative_answer_uniqueness_assessment in ["unclear", "non-unique"]:
+                failure_reasons.append(f"answer not unique ({self.tentative_answer_uniqueness_assessment})")
+        failure_reason = " and ".join(failure_reasons)
+        return answer_quality_acceptable, failure_reason

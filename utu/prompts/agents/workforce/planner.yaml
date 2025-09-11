@@ -309,3 +309,9 @@ TASK_REFLECTION_PROMPT: |
   - **Fallback strategies**: What alternative approaches should be ready if the primary plan encounters issues?
 
   Provide specific, actionable insights that directly inform better task decomposition and execution strategy.
+
+REFLECTION_FAILURE_PROMPT_1: |
+  Additional Context: Answer extraction resulted in {failure_reason}. The task execution results may be insufficient or ambiguous for determining a clear answer.
+
+REFLECTION_FAILURE_PROMPT_2: |
+  Additional Context: Self-check failed for tentative answer: {tentative_answer}. The answer may not follow the correct format or process requirements.
