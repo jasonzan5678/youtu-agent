@@ -24,7 +24,7 @@ from pathlib import Path
 from colorama import Fore
 
 from utu.config import ToolkitConfig
-from utu.tools import AsyncBaseToolkit
+from utu.tools import AsyncBaseToolkit, register_tool
 from utu.utils import get_logger
 
 logger = get_logger(__name__)
@@ -452,6 +452,7 @@ class CodeExecutionToolkit(AsyncBaseToolkit):
             working_dir=working_dir,
         )
 
+    @register_tool
     async def execute_code(self, code: str) -> str:
         r"""Execute Python code in a secure sandbox environment.
 
@@ -492,6 +493,3 @@ class CodeExecutionToolkit(AsyncBaseToolkit):
             code = f.read()
         f.close()
         return self.execute_code(code)
-
-    async def get_tools_map(self) -> dict[str, Callable]:
-        return {"execute_code": self.execute_code}

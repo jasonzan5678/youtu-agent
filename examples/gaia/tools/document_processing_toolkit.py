@@ -29,7 +29,7 @@ from examples.gaia.tools.image_analysis_toolkit import ImageAnalysisToolkit
 from examples.gaia.tools.audio_analysis_toolkit import AudioAnalysisToolkit
 
 from utu.config import ToolkitConfig, ConfigLoader
-from utu.tools import AsyncBaseToolkit
+from utu.tools import AsyncBaseToolkit, register_tool
 from utu.tools.search.jina_crawl import JinaCrawl
 from utu.utils import get_logger, SimplifiedAsyncOpenAI, FileUtils
 
@@ -60,6 +60,7 @@ class DocumentProcessingToolkit(AsyncBaseToolkit):
         self.cache_dir = "workspace/"
         os.makedirs(os.path.join(self.cache_dir, "docx_cache"), exist_ok=True)
 
+    @register_tool
     async def extract_document_content(self, document_path: str, query: Optional[str] = None) -> str:
         r"""Extract the content of a given document and return the processed text.
         It may filter out some information, resulting in inaccurate content.
@@ -190,6 +191,7 @@ class DocumentProcessingToolkit(AsyncBaseToolkit):
             extracted_text = [item.text for item in extracted_text]
             return extracted_text
 
+    @register_tool
     async def extract_web_content(self, url: str, query: str) -> str:
         r"""Extract and analyze webpage content given a webpage URL and a query, and return the processed text based on the query.
 
@@ -423,9 +425,3 @@ class DocumentProcessingToolkit(AsyncBaseToolkit):
                 extracted_files.append(os.path.join(root, file))
 
         return extracted_files
-
-    async def get_tools_map(self) -> dict[str, Callable]:
-        return {
-            "extract_document_content": self.extract_document_content,
-            "extract_web_content": self.extract_web_content,
-        }

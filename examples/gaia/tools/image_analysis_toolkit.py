@@ -23,7 +23,7 @@ import requests
 from PIL import Image
 
 from utu.config import ToolkitConfig
-from utu.tools import AsyncBaseToolkit
+from utu.tools import AsyncBaseToolkit, register_tool
 from utu.utils import EnvUtils, SimplifiedAsyncOpenAI, get_logger
 
 logger = get_logger(__name__)
@@ -44,6 +44,7 @@ class ImageAnalysisToolkit(AsyncBaseToolkit):
         }
         self.llm = SimplifiedAsyncOpenAI(**image_llm_config)
 
+    @register_tool
     async def image_to_text(self, image_path: str) -> str:
         r"""Generates textual description of an image with optional custom
         prompt.
@@ -62,6 +63,7 @@ class ImageAnalysisToolkit(AsyncBaseToolkit):
             system_message=system_msg,
         )
 
+    @register_tool
     async def ask_question_about_image(self, image_path: str, question: str) -> str:
         r"""Answers image questions with optional custom instructions.
 
@@ -128,9 +130,3 @@ class ImageAnalysisToolkit(AsyncBaseToolkit):
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
             return f"Analysis failed: {e!s}"
-
-    async def get_tools_map(self) -> dict[str, Callable]:
-        return {
-            "image_to_text": self.image_to_text,
-            "ask_question_about_image": self.ask_question_about_image,
-        }

@@ -17,11 +17,10 @@
 import asyncio
 import os
 import pathlib
-from collections.abc import Callable
 from typing import Any
 
 from utu.config import ToolkitConfig
-from utu.tools import AsyncBaseToolkit
+from utu.tools import AsyncBaseToolkit, register_tool
 from utu.tools.search.google_search import GoogleSearch
 from utu.tools.search.jina_crawl import JinaCrawl
 from utu.utils import FileUtils, SimplifiedAsyncOpenAI, get_logger
@@ -50,6 +49,7 @@ class SearchToolkit(AsyncBaseToolkit):
         self.cache_dir = "workspace/"
         os.makedirs(self.cache_dir, exist_ok=True)
 
+    @register_tool
     async def search_google(self, query: str, num_results: int = 10) -> list[dict[str, Any]]:
         r"""Use Google search engine to search information for the given query.
 
@@ -105,6 +105,7 @@ class SearchToolkit(AsyncBaseToolkit):
         formatted_content += "\n</search results end>"
         return formatted_content
 
+    @register_tool
     async def multi_query_deep_search(self, search_queries: list[str], question: str) -> str:
         r"""Perform multi-query deep search by using multiple search queries to find comprehensive information about the same topic, then extract webpage content and use LLM analysis.
 
@@ -304,6 +305,7 @@ class SearchToolkit(AsyncBaseToolkit):
 
         return final_answer
 
+    @register_tool
     async def parallel_search(self, search_queries: list[str], question: str) -> str:
         r"""Perform parallel search by using multiple Google search queries to search for different targets simultaneously and combining their snippets to answer a common question.
 
@@ -406,10 +408,3 @@ class SearchToolkit(AsyncBaseToolkit):
         final_answer += "</parallel_search_results>"
 
         return final_answer
-
-    async def get_tools_map(self) -> dict[str, Callable]:
-        return {
-            "search_google": self.search_google,
-            "parallel_search": self.parallel_search,
-            "multi_query_deep_search": self.multi_query_deep_search,
-        }
