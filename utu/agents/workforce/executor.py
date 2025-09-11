@@ -108,7 +108,7 @@ class ExecutorAgent:
             )
             summary_response = await self.executor_agent.run(summary_prompt)
             recorder.add_run_result(summary_response.get_run_result(), "executor_summary")  # add executor trajectory
-            task.task_result_detailed, task.task_result = summary_response.final_output, summary_response.final_output
+            task.task_result_detailed, task.task_result = task.task_result, summary_response.final_output
             logger.info(f"Task result summarized: {task.task_result_detailed} -> {task.task_result}")
 
     def _parse_task_check_result(self, response) -> bool:
