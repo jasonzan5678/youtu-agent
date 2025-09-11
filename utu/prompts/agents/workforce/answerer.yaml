@@ -20,15 +20,56 @@ FINAL_ANSWER_PROMPT: |
   If there is a conflict between the assumptions in the question and the actual facts, prioritize the assumptions stated in the question.
   </requirements>
 
+  <critical_instruction>
+  YOU MUST ALWAYS provide a final answer. Even if the task execution results are incomplete, unclear, or seem insufficient, you should:
+  1. Use any available partial information to make your best educated guess
+  2. Extract the most relevant information from what was completed
+  3. Make reasonable assumptions based on the context of the question
+  4. Provide the most likely answer based on available evidence
+  5. Never respond with "cannot determine", "insufficient information", or similar non-answers
+
+  STRICT RULE: Do NOT make assumptions, inferences, or speculations that are not explicitly supported by the task execution results. If the task results do not explicitly provide enough information to determine a unique answer, you must acknowledge this in your answer_uniqueness assessment.
+
+  Examples of FORBIDDEN speculation:
+  - Assuming chronological order when none is provided ("listed first" does not mean "chronologically first")
+  - Making assumptions about which item to choose when multiple options exist without explicit criteria
+  - Inferring relationships or rankings not explicitly stated in the results
+  - Choosing between options based on unstated preferences or assumptions
+
+  If no clear evidence exists, provide the most reasonable default answer for the question type (e.g., "0" for numeric questions, "unknown" for string questions, etc.).
+  </critical_instruction>
+
   Please analyze the task execution results and output the final answer in the exact format required by the question.
 
   Output format:
   <analysis>
-  Analyze the task execution results and identify what the final answer should be based on the question requirements.
+  First, analyze the completion status of all subtasks and identify what information is available (even if partial or incomplete).
+  Then, carefully identify the specific output format requirements from the question (e.g., number, string, list, specific units, etc.).
+  Next, analyze the task execution results to determine what the final answer content should be. If information is incomplete, DO NOT make assumptions or speculations - only work with explicitly provided information.
+  Finally, ensure the answer content matches the identified format requirements from the question. If you must make assumptions due to incomplete data, acknowledge this clearly and assess answer_uniqueness as "unclear" or "non-unique".
   </analysis>
   <answer>
-  The final answer in the exact format specified by the question.
+  The final answer in the exact format specified by the question. This must be provided regardless of data completeness.
   </answer>
+  <answer_uniqueness>
+  Assess the uniqueness of the answer based on the task execution results. Choose one of:
+  - unique: The task results clearly point to one definitive answer with no ambiguity AND no speculation is required
+  - unclear: The task results are insufficient or ambiguous, making it difficult to determine a clear answer
+  - non-unique: Multiple valid answers are possible based on the available information OR speculation would be required to choose between options
+
+  This assessment should be based purely on the clarity and completeness of the information in the task execution results. If any speculation, assumption, or inference beyond what is explicitly stated would be needed, choose "unclear" or "non-unique".
+  </answer_uniqueness>
+  <confidence>
+  Your confidence level in this answer. Choose one of:
+  - high: The answer is well-supported by complete and clear task execution results with no ambiguity, speculation, or assumptions required (answer_uniqueness must be "unique")
+  - medium: The answer is reasonably supported but some information may be incomplete or requires minor assumptions
+  - low: The answer is based on limited information, requires significant assumptions or inference, involves speculation about unclear information, or when multiple interpretations are possible (answer_uniqueness should be "unclear" or "non-unique")
+
+  MANDATORY: Your confidence should directly correspond to the answer_uniqueness assessment:
+  - If answer_uniqueness is "unique": confidence can be high (if well-supported) or medium (if minor assumptions needed)
+  - If answer_uniqueness is "unclear" or "non-unique": confidence must be low
+  - If you made ANY speculation or assumption not explicitly supported by the task results: confidence must be low
+  </confidence>
 
 ANSWER_CHECK_PROMPT: |
   You are an expert evaluator tasked with determining whether two answers have the same semantic meaning, even if they differ in format or wording.
@@ -54,3 +95,62 @@ ANSWER_CHECK_PROMPT: |
   <equivalent>
   yes/no
   </equivalent>
+
+ANSWER_SELF_CHECK_PROMPT: |
+  You are an expert evaluator tasked with checking whether an answer correctly follows the required format and process for solving a question.
+
+  <question>
+  {question}
+  </question>
+
+  <task_execution_results>
+  {task_results}
+  </task_execution_results>
+
+  <attempted_answer>
+  {attempt_answer}
+  </attempted_answer>
+
+  Please analyze whether the attempted answer is correct by checking:
+
+  <evaluation_criteria>
+  1. **Format Requirements**: Does the answer follow the exact format specified by the question?
+    - Is it a number without unnecessary formatting (no commas, units unless specified)?
+    - Is it a concise string without articles or abbreviations (unless specified)?
+    - Is it a properly formatted comma-separated list if required?
+    - Does it match any other specific format requirements from the question?
+
+  2. **Process Adherence**: Was the answer properly derived from the task execution results?
+    - Was information correctly extracted from the completed subtasks?
+    - Were reasonable inferences made for any incomplete information?
+    - Does the answer align with the evidence provided in the task results?
+
+  3. **Content Accuracy**: Is the answer content appropriate for the question?
+    - Does it directly address what was asked?
+    - Are any assumptions reasonable given the context?
+    - Is the answer complete and not a non-answer like "cannot determine"?
+
+  4. **Answer Existence**: Does the answer acknowledge that every question has a definitive answer?
+    - Remember that the question ALWAYS has a specific, correct answer that can be determined
+    - If the task execution results don't provide sufficient information to find this answer, it indicates a failure in the execution process, not an inherent ambiguity in the question
+    - Answers like "unknown", "cannot determine", "not available", "content not available", "information not found", or any variation indicating absence of information should be considered FAILURES
+    - Even if the task execution results suggest that certain content doesn't exist, the question itself assumes that content exists and asks for specific information about it
+    - The attempted answer should provide a concrete, specific answer rather than stating that information is unavailable or doesn't exist
+    - Absence of evidence in task results should be treated as execution failure, not as a valid final answer
+
+  5. **Overall Quality**: Does the answer meet the critical requirements?
+    - Is a definitive answer provided even if information was partial?
+    - Does it prioritize question assumptions over conflicting facts when specified?
+  </evaluation_criteria>
+
+  <critical_instruction>
+  Be thorough in your evaluation. Check both the format compliance and the logical derivation from task results.
+  </critical_instruction>
+
+  Output format:
+  <analysis>
+  Detailed analysis of the answer's format compliance, process adherence, content accuracy, and overall quality. Identify specific issues if any exist.
+  </analysis>
+  <correct>
+  yes/no
+  </correct>

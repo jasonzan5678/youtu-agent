@@ -13,7 +13,8 @@ defaults:
 type: workforce
 
 workforce_config:
-  executor_max_tries: 2  # max tries for task execution
+  planner_max_reflection: 3  # max times for planner reflection (retry)
+  executor_max_tries: 3  # max tries for task execution
   executor_return_summary: true  # whether to return summary
 
 workforce_executor_infos:
