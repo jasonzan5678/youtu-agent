@@ -88,21 +88,23 @@ class AgentConfig(ConfigBaseModel):
     - `template_path`: template Jinja2 file path, with `question` and `trajectory` variables"""
 
     # workforce agent config
+    workforce_config: dict = Field(default_factory=dict)
+    """Workforce config (dict)"""
     workforce_planner_model: ModelConfigs = Field(default_factory=ModelConfigs)
     """Workforce planner model config"""
-    workforce_planner_config: dict = Field(default_factory=dict)
-    """Workforce planner config (dict)"""
+    # workforce_planner_config: dict = Field(default_factory=dict)
+    # """Workforce planner config (dict)"""
     workforce_assigner_model: ModelConfigs = Field(default_factory=ModelConfigs)
     """Workforce assigner model config"""
-    workforce_assigner_config: dict = Field(default_factory=dict)
-    """Workforce assigner config (dict)"""
+    # workforce_assigner_config: dict = Field(default_factory=dict)
+    # """Workforce assigner config (dict)"""
     workforce_answerer_model: ModelConfigs = Field(default_factory=ModelConfigs)
     """Workforce answerer model config"""
-    workforce_answerer_config: dict = Field(default_factory=dict)
-    """Workforce answerer config (dict)"""
+    # workforce_answerer_config: dict = Field(default_factory=dict)
+    # """Workforce answerer config (dict)"""
     workforce_executor_agents: dict[str, "AgentConfig"] = Field(default_factory=dict)
     """Workforce executor agents config"""
-    workforce_executor_config: dict = Field(default_factory=dict)
-    """Workforce executor config (dict)"""
+    # workforce_executor_config: dict = Field(default_factory=dict)
+    # """Workforce executor config (dict)"""
     workforce_executor_infos: list[dict] = Field(default_factory=list)
-    """Workforce executor infos, list of {name, desc, strengths, weaknesses}"""
+    """Workforce executor infos, list of {name, description, toolnames}"""

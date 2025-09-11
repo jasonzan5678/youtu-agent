@@ -12,9 +12,9 @@ defaults:
 
 type: workforce
 
-workforce_executor_config:
-  max_tries: 2  # max tries for task execution
-  return_summary: true  # whether to return summary
+workforce_config:
+  executor_max_tries: 2  # max tries for task execution
+  executor_return_summary: true  # whether to return summary
 
 workforce_executor_infos:
   - name: Web Search Agent

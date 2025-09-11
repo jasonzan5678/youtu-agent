@@ -18,12 +18,11 @@ class ExecutorAgent:
     """Executor agent that executes tasks assigned by the planner."""
 
     def __init__(self, config: AgentConfig, workforce_config: AgentConfig):
-        self.config = config
         self.executor_agent = SimpleAgent(config=config)
 
-        executor_config = workforce_config.workforce_executor_config
-        self.max_tries = executor_config.get("max_tries", 1)
-        self.return_summary = executor_config.get("return_summary", False)
+        _config = workforce_config.workforce_config
+        self.max_tries = _config.get("executor_max_tries", 1)
+        self.return_summary = _config.get("executor_return_summary", False)
 
         self.reflection_history = []
 
