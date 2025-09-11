@@ -49,10 +49,10 @@ class SimpleMemoryToolkit(AsyncBaseToolkit):
         count = old_memory.count(old_string)
 
         if count > 1:
-            return {
+            return (
                 f"Warning: Found {count} occurrences of '{old_string}'. "
                 "Please confirm which occurrence to replace or use more specific context."
-            }
+            )
 
         self.full_memory = self.full_memory.replace(old_string, new_string)
         return "Edited memory: 1 occurrence replaced."

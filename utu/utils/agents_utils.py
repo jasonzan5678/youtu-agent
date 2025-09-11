@@ -10,6 +10,7 @@ from agents import (
     HandoffOutputItem,
     ItemHelpers,
     MessageOutputItem,
+    Model,
     ModelSettings,
     ModelTracing,
     OpenAIChatCompletionsModel,
@@ -109,11 +110,11 @@ class AgentsUtils:
 
     @staticmethod
     def get_agents_model(
-        type: Literal["responses", "chat.completions"] = None,
+        type: Literal["responses", "chat.completions", "litellm"] = None,
         model: str = None,
         base_url: str = None,
         api_key: str = None,
-    ) -> OpenAIChatCompletionsModel | OpenAIResponsesModel:
+    ) -> Model:
         type = type or os.getenv("UTU_LLM_TYPE", "chat.completions")
         model = model or os.getenv("UTU_LLM_MODEL")
         base_url = base_url or os.getenv("UTU_LLM_BASE_URL")
@@ -129,6 +130,13 @@ class AgentsUtils:
             return OpenAIChatCompletionsModel(model=model, openai_client=openai_client)
         elif type == "responses":
             return OpenAIResponsesModel(model=model, openai_client=openai_client)
+        elif type == "litellm":
+            # Ref: https://docs.litellm.ai/docs/providers
+            # NOTE: should set .evn properly! e.g. AZURE_API_KEY, AZURE_API_BASE, AZURE_API_VERSION for Azure
+            #   https://docs.litellm.ai/docs/providers/azure/
+            from agents.extensions.models.litellm_model import LitellmModel
+
+            return LitellmModel(model=model)
         else:
             raise ValueError("Invalid type: " + type)
 

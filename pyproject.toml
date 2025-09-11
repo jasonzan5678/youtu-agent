@@ -36,6 +36,11 @@ dependencies = [
     "wikipedia-api>=0.8.1",
 ]
 
+[project.optional-dependencies]
+litllm = [
+    "litellm>=1.77.0",
+]
+
 [dependency-groups]
 dev = [
     "arize-phoenix-client>=1.14.1",

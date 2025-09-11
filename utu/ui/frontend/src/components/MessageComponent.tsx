@@ -73,7 +73,7 @@ const MessageComponent: React.FC<MessageComponentProps> = ({
     if (message.content.toolName == "final_answer") {
       return (
         <div className="tool-call-argument">
-          <SafeMarkdown>{displayContent}</SafeMarkdown>
+          <SafeMarkdown messageId={messageId + "-tool-call-argument"}>{displayContent}</SafeMarkdown>
         </div>
       )
     }

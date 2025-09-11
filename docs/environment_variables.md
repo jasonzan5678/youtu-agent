@@ -120,7 +120,9 @@ Used to configure the address and port for the front-end interface.
 
 ```sh
 # Port for the frontend service to listen on
-FRONTEND_PORT=8848
+UTU_WEBUI_PORT=8848
 # IP address for the frontend service to listen on
-FRONTEND_IP=127.0.0.1
+UTU_WEBUI_IP=127.0.0.1
+# Whether to enable auto reload for tornado server
+UTU_WEBUI_AUTOLOAD=false
 ```

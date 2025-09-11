@@ -40,6 +40,9 @@ const initialMessages: Message[] = [
   }
 ];
 
+// 根据当前协议自动选择 ws:// 或 wss://
+const defaultProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const defaultWsUrl = import.meta.env.VITE_WS_URL || `${defaultProtocol}//${window.location.host}/ws`;
 
 
 const App: React.FC = () => {
@@ -49,7 +52,7 @@ const App: React.FC = () => {
   const [exampleQuery, setExampleQuery] = useState<string[]>([]);
   const [hideExampleQuery, setHideExampleQuery] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [wsUrl, setWsUrl] = useState(localStorage.getItem('wsUrl') || 'ws://localhost:8848/ws');
+  const [wsUrl, setWsUrl] = useState(localStorage.getItem('wsUrl') || defaultWsUrl);
   const { sendQuery, sendRequest, lastMessage, readyState } = useChatWebSocket(wsUrl);
   const [inputValue, setInputValue] = useState('');
   const [isModelResponding, setIsModelResponding] = useState(false);
@@ -65,6 +68,9 @@ const App: React.FC = () => {
   const [askId, setAskId] = useState<string | null>(null);
   const [agentType, setAgentType] = useState<'simple' | 'orchestra' | 'other'>('simple');
   const [subAgents, setSubAgents] = useState<string[] | null>(null);
+
+  const [showNewChatButton, setShowNewChatButton] = useState(false);
+  const [showAgentConfigs, setShowAgentConfigs] = useState(false);
 
   const getConfigList = () => {
     let request: UserRequest = {
@@ -262,6 +268,8 @@ const App: React.FC = () => {
       setCurrentConfig(initData.default_agent);
       setAgentType(initData.agent_type);
       setSubAgents(initData.sub_agents);
+      setShowNewChatButton(true);
+      setShowAgentConfigs(true);
       
       // Send list_agents command on init
       sendRequest({
@@ -277,6 +285,8 @@ const App: React.FC = () => {
         setAgentType(data.agent_type);
         setSubAgents(data.sub_agents);
         setIsGeneratingAgent(false);
+        // clear messages
+        setMessages(initialMessages);
       } else {
         console.error('Switch agent failed');
       }
@@ -565,6 +575,8 @@ const App: React.FC = () => {
         handleAddConfig={handleAddConfig}
         getConfigList={getConfigList}
         availableConfigs={availableConfigs}
+        showNewChatButton={showNewChatButton}
+        showAgentConfigs={showAgentConfigs}
       />
       
       <div className="main-content">

@@ -281,10 +281,10 @@ If you want to visualize the agent’s runtime status using the web UI, download
 
 ```bash
 # Download the frontend package
-curl -LO https://github.com/Tencent/Youtu-agent/releases/download/frontend%2Fv0.1.6/utu_agent_ui-0.1.6-py3-none-any.whl
+curl -LO https://github.com/Tencent/Youtu-agent/releases/download/frontend%2Fv0.2.0/utu_agent_ui-0.2.0-py3-none-any.whl
 
 # Install the frontend package
-uv pip install utu_agent_ui-0.1.6-py3-none-any.whl
+uv pip install utu_agent_ui-0.2.0-py3-none-any.whl
 ```
 
 Next, run the web version of the SVG image generation command:
