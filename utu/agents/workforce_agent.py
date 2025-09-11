@@ -10,7 +10,7 @@ from agents import trace
 from ..config import AgentConfig, ConfigLoader
 from ..utils import AgentsUtils, FileUtils, get_logger
 from .base_agent import BaseAgent
-from .workforce import AnswererAgent, AssignerAgent, ExecutorAgent, PlannerAgent, WorkspaceTaskRecorder
+from .workforce import AnswererAgent, AssignerAgent, ExecutorAgent, PlannerAgent, WorkforceTaskRecorder
 
 logger = get_logger(__name__)
 PLANNER_PROMPTS = FileUtils.load_prompts("agents/workforce/planner.yaml")
@@ -27,7 +27,7 @@ class WorkforceAgent(BaseAgent):
         logger.info(f"Workforce agent config: {self.config.workforce_config}")
         self.planner_max_reflection = config.workforce_config.get("planner_max_reflection", 1)
 
-    async def run(self, input: str, trace_id: str = None) -> WorkspaceTaskRecorder:
+    async def run(self, input: str, trace_id: str = None) -> WorkforceTaskRecorder:
         trace_id = trace_id or AgentsUtils.gen_trace_id()
 
         logger.info("Initializing agents...")
@@ -38,7 +38,7 @@ class WorkforceAgent(BaseAgent):
         for name, config in self.config.workforce_executor_agents.items():
             executor_agent_group[name] = ExecutorAgent(config=config, workforce_config=self.config)
 
-        recorder = WorkspaceTaskRecorder(
+        recorder = WorkforceTaskRecorder(
             overall_task=input, executor_agent_kwargs_list=self.config.workforce_executor_infos
         )
 

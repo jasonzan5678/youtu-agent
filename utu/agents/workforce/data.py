@@ -28,7 +28,7 @@ class Subtask:
 
 
 @dataclass
-class WorkspaceTaskRecorder(TaskRecorder):
+class WorkforceTaskRecorder(TaskRecorder):
     overall_task: str = ""
     executor_agent_kwargs_list: list[dict] = field(default_factory=list)
     task_plan: list[Subtask] = field(default_factory=list)

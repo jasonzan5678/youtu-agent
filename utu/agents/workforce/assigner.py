@@ -3,7 +3,7 @@ import re
 from ...config import AgentConfig
 from ...utils import FileUtils, get_logger
 from ..llm_agent import LLMAgent
-from .data import Subtask, WorkspaceTaskRecorder
+from .data import Subtask, WorkforceTaskRecorder
 
 logger = get_logger(__name__)
 
@@ -23,7 +23,7 @@ class AssignerAgent:
         self.config = config
         self.llm = LLMAgent(config.workforce_planner_model)
 
-    async def assign_task(self, recorder: WorkspaceTaskRecorder) -> Subtask:
+    async def assign_task(self, recorder: WorkforceTaskRecorder) -> Subtask:
         """Assigns a task to a worker node with the best capability."""
         next_task = recorder.get_next_task()
 

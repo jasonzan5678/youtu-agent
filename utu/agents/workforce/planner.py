@@ -7,7 +7,7 @@ import re
 from ...config import AgentConfig
 from ...utils import FileUtils, get_logger
 from ..llm_agent import LLMAgent
-from .data import Subtask, WorkspaceTaskRecorder
+from .data import Subtask, WorkforceTaskRecorder
 
 logger = get_logger(__name__)
 PROMPTS = FileUtils.load_prompts("agents/workforce/planner.yaml")
@@ -20,7 +20,7 @@ class PlannerAgent:
         self.config = config
         self.llm = LLMAgent(config.workforce_planner_model)
 
-    async def plan_task(self, recorder: WorkspaceTaskRecorder) -> None:
+    async def plan_task(self, recorder: WorkforceTaskRecorder) -> None:
         """Plan tasks based on the overall task and available agents."""
         # TODO: replan with `failure_info`
         plan_prompt = PROMPTS["TASK_PLAN_PROMPT"].format(
@@ -37,7 +37,7 @@ class PlannerAgent:
         tasks = [Subtask(task_id=i + 1, task_name=task) for i, task in enumerate(tasks_content)]
         recorder.plan_init(tasks)
 
-    async def plan_update(self, recorder: WorkspaceTaskRecorder, task: Subtask) -> str:
+    async def plan_update(self, recorder: WorkforceTaskRecorder, task: Subtask) -> str:
         """Update the task plan based on completed tasks."""
         task_plan_list = recorder.formatted_task_plan_list_with_task_results
         last_task_id = task.task_id
@@ -100,7 +100,7 @@ class PlannerAgent:
 
         return choice, updated_tasks
 
-    async def plan_check(self, recorder: WorkspaceTaskRecorder, task: Subtask) -> None:
+    async def plan_check(self, recorder: WorkforceTaskRecorder, task: Subtask) -> None:
         task_check_prompt = (
             PROMPTS["TASK_CHECK_PROMPT"]
             .strip()
@@ -135,7 +135,7 @@ class PlannerAgent:
             logger.warning("No task status found in response. Defaulting to 'partial success'.")
             return "partial success"
 
-    async def reflect_on_failure(self, recorder: WorkspaceTaskRecorder, additional_context: str = None) -> None:
+    async def reflect_on_failure(self, recorder: WorkforceTaskRecorder, additional_context: str = None) -> None:
         """Reflect on the failure of the overall task and provide analysis."""
         reflection_prompt = PROMPTS["TASK_REFLECTION_PROMPT"].format(
             question=recorder.overall_task,

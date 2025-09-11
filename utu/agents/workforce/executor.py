@@ -7,7 +7,7 @@ import re
 from ...config import AgentConfig
 from ...utils import FileUtils, get_logger
 from ..simple_agent import SimpleAgent
-from .data import Subtask, WorkspaceTaskRecorder
+from .data import Subtask, WorkforceTaskRecorder
 
 logger = get_logger(__name__)
 
@@ -28,7 +28,7 @@ class ExecutorAgent:
 
     async def execute_task(
         self,
-        recorder: WorkspaceTaskRecorder,
+        recorder: WorkforceTaskRecorder,
         task: Subtask,
     ) -> None:
         """Execute the task and check the result."""

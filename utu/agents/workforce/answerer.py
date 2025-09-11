@@ -3,7 +3,7 @@ import re
 from ...config import AgentConfig
 from ...utils import FileUtils, get_logger
 from ..llm_agent import LLMAgent
-from .data import WorkspaceTaskRecorder
+from .data import WorkforceTaskRecorder
 
 logger = get_logger(__name__)
 PROMPTS: dict[str, str] = FileUtils.load_prompts("agents/workforce/answerer.yaml")
@@ -16,7 +16,7 @@ class AnswererAgent:
         self.config = config
         self.llm = LLMAgent(config.workforce_answerer_model)
 
-    async def extract_final_answer(self, recorder: WorkspaceTaskRecorder) -> None:
+    async def extract_final_answer(self, recorder: WorkforceTaskRecorder) -> None:
         """Extract the final answer from formatted task execution results."""
         # Generate final answer prompt
         final_prompt = (
@@ -63,7 +63,7 @@ class AnswererAgent:
         """Check if model answer and ground truth are semantically equivalent using LLM."""
         raise NotImplementedError
 
-    async def answer_self_check(self, recorder: WorkspaceTaskRecorder) -> bool:
+    async def answer_self_check(self, recorder: WorkforceTaskRecorder) -> bool:
         """Self-check if the attempted answer follows correct format and process."""
         self_check_prompt = PROMPTS["ANSWER_SELF_CHECK_PROMPT"].format(
             question=recorder.overall_task,

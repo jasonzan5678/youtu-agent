@@ -1,6 +1,6 @@
 from .answerer import AnswererAgent
 from .assigner import AssignerAgent
-from .data import WorkspaceTaskRecorder
+from .data import WorkforceTaskRecorder
 from .executor import ExecutorAgent
 from .planner import PlannerAgent
 
@@ -9,5 +9,5 @@ __all__ = [
     "PlannerAgent",
     "AssignerAgent",
     "AnswererAgent",
-    "WorkspaceTaskRecorder",
+    "WorkforceTaskRecorder",
 ]
