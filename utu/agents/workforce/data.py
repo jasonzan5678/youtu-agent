@@ -36,10 +36,13 @@ class WorkspaceTaskRecorder(TaskRecorder):
     @property
     def executor_agents_info(self) -> str:
         """Get the executor agents info."""
-        return "\n".join(
-            f"- {agent_kwargs['name']}: {agent_kwargs['description']}"  # TODO: add tool infos
-            for agent_kwargs in self.executor_agent_kwargs_list
-        )
+        tools_str = []
+        for agent_kwargs in self.executor_agent_kwargs_list:
+            tools_str.append(
+                f"- {agent_kwargs['name']}: {agent_kwargs['description']}\n"
+                f"  Available tools: {', '.join(agent_kwargs['toolnames'])}"
+            )
+        return "\n".join(tools_str)
 
     @property
     def executor_agents_names(self) -> str:
@@ -65,7 +68,7 @@ class WorkspaceTaskRecorder(TaskRecorder):
 
     def plan_update(self, task: Subtask, updated_plan: list[str]) -> None:
         finished_tasks = self.task_plan[: task.task_id]
-        new_tasks = [Subtask(task_id=task.task_id + i, task_name=t) for i, t in enumerate(updated_plan)]
+        new_tasks = [Subtask(task_id=task.task_id + i, task_name=t) for i, t in enumerate(updated_plan, 1)]
         self.task_plan = finished_tasks + new_tasks
 
     # -----------------------------------------------------------
