@@ -19,9 +19,12 @@ workforce_executor_config:
 workforce_executor_infos:
   - name: Web Search Agent
     description: A web information search specialist that excels at finding relevant information through search tools (Google, Wikipedia, archived pages) and extracting webpage content for understanding. Focuses on information discovery and identifying authoritative sources.
+    toolnames: ["search_google", "parallel_search", "multi_query_deep_search", "extract_web_content", "extract_document_content"]
   # - name: Web Browsing Agent
   #   description: A web browsing specialist that excels at deep website navigation and interaction through browser simulation. Can perform complex browser actions like clicking, scrolling, form filling, and extracting content from JavaScript-rendered pages.
   - name: Document Processing Agent
     description: A helpful assistant that can process a variety of local and remote documents, including pdf, docx, images, audio, and video, etc.
+    toolnames: ["extract_document_content", "extract_web_content", "execute_code"]
   - name: Reasoning Coding Agent
     description: A helpful assistant that specializes in reasoning, coding, and processing excel files. However, it cannot access the internet to search for information. If the task requires python execution, it should be informed to execute the code after writing it.
+    toolnames: ["extract_excel_content", "execute_code", "extract_document_content"]

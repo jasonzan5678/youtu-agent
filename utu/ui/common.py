@@ -19,6 +19,7 @@ class OrchestraDescription(BaseModel):
     planner: str
     reporter: str
 
+
 class TextDeltaContent(BaseModel):
     type: Literal["reason", "tool_call", "tool_call_argument", "tool_call_output", "text"]
     delta: str

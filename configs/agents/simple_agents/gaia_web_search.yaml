@@ -62,4 +62,4 @@ toolkits:
     mode: customized
     customized_filepath: examples/gaia/tools/document_processing_toolkit.py
     customized_classname: DocumentProcessingToolkit
-    activated_tools: null
+    activated_tools: ["extract_web_content", "extract_document_content"]

@@ -15,10 +15,7 @@ PROMPTS = FileUtils.load_prompts("agents/workforce/executor.yaml")
 
 
 class ExecutorAgent:
-    """Executor agent that executes tasks assigned by the planner.
-
-    - TODO: self-reflection
-    """
+    """Executor agent that executes tasks assigned by the planner."""
 
     def __init__(self, config: AgentConfig, workforce_config: AgentConfig):
         self.config = config
