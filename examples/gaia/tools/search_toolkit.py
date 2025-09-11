@@ -39,10 +39,15 @@ class SearchToolkit(AsyncBaseToolkit):
         )
 
         config = {
-            "search_params": {
-                "hl": "en",  # language code
-                "page": 1,  # page number
-            }
+            # "search_params": {
+            #     "hl": "en",  # language code
+            #     "page": 1,  # page number
+            # }
+            "search_banned_sites": [
+                "https://huggingface.co/",
+                "https://grok.com/share/",
+                "https://modelscope.cn/datasets/",
+            ]
         }
         self.google_searcher = GoogleSearch(config)
         self.max_concurrent_jina_calls = 3
