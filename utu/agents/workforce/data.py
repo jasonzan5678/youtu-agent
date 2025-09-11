@@ -32,6 +32,11 @@ class WorkspaceTaskRecorder(TaskRecorder):
     overall_task: str = ""
     executor_agent_kwargs_list: list[dict] = field(default_factory=list)
     task_plan: list[Subtask] = field(default_factory=list)
+    failure_info: str = ""
+
+    tentative_answer: str = ""
+    tentative_answer_confidence: str = ""
+    tentative_answer_uniqueness_assessment: str = ""
 
     @property
     def executor_agents_info(self) -> str:
@@ -87,3 +92,12 @@ class WorkspaceTaskRecorder(TaskRecorder):
             if task.task_status == "not started":
                 return task
         return "No uncompleted tasks."
+
+    # -----------------------------------------------------------
+    def update_failure_info(self, failure_info: str) -> None:
+        self.failure_info = failure_info
+
+    def update_tentative_answer(self, answer: str, confidence: str, uniqueness_assessment: str) -> None:
+        self.tentative_answer = answer
+        self.tentative_answer_confidence = confidence
+        self.tentative_answer_uniqueness_assessment = uniqueness_assessment

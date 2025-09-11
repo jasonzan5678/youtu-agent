@@ -256,3 +256,56 @@ TASK_UPDATE_PLAN_PROMPT: |
   </updated_unfinished_task_plan>
 
   Focus on practical improvements that enhance the success of completing the overall mission, or recognize when the mission is already complete.
+
+
+TASK_REFLECTION_PROMPT: |
+  You attempted to complete the following task but were unsuccessful:
+
+  <question>
+  {question}
+  </question>
+
+  Here are the completed subtasks and their results:
+  <task_execution_results>
+  {task_results}
+  </task_execution_results>
+
+  Please provide a comprehensive failure analysis that will help improve the task decomposition and execution strategy for the next attempt.
+
+  ## Failure Analysis
+
+  ### Root Cause Assessment
+  - **Primary failure point**: Which specific subtask or step caused the overall failure?
+  - **Failure category**: Was this due to insufficient information, wrong tool selection, poor task sequencing, inadequate search strategy, or execution errors?
+  - **Missing capabilities**: What required information, tools, or approaches were not available or utilized?
+
+  ### Task Decomposition Issues
+  - **Granularity problems**: Were subtasks too broad/narrow for effective execution?
+  - **Sequencing errors**: Were subtasks ordered incorrectly or missing critical dependencies?
+  - **Agent mismatch**: Were subtasks assigned to agents lacking the required capabilities?
+  - **Information gaps**: Were there missing intermediate steps that would have provided necessary context?
+
+  ### Execution Pattern Analysis
+  - **What worked**: List any subtasks that produced useful results or took the right approach
+  - **What failed completely**: Identify subtasks that provided no value or incorrect results
+  - **Partial successes**: Note approaches that showed promise but fell short of requirements
+
+  ### Strategic Insights
+  - **Alternative approaches**: What fundamentally different strategies could be more effective?
+  - **Resource optimization**: How should search queries, code execution, or tool usage be improved?
+  - **Quality control**: What verification steps were missing that could prevent similar failures?
+  - **Scope adjustment**: Should the task be broken into more/fewer pieces or approached differently?
+
+  ## Recommendations for Replanning
+
+  ### Immediate Improvements
+  - **Task restructuring**: How should subtasks be redesigned (merge, split, reorder, or replace)?
+  - **Tool selection**: Which agents or capabilities should be prioritized for specific subtasks?
+  - **Search strategy**: How should information gathering be improved (better queries, different sources, verification steps)?
+
+  ### Success Criteria
+  - **Progress indicators**: What intermediate outputs will signal the approach is working?
+  - **Quality checkpoints**: How can we validate results before proceeding to dependent tasks?
+  - **Fallback strategies**: What alternative approaches should be ready if the primary plan encounters issues?
+
+  Provide specific, actionable insights that directly inform better task decomposition and execution strategy.
