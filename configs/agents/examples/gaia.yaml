@@ -5,7 +5,7 @@ defaults:
   - /model/base@workforce_assigner_model
   - /model/base@workforce_answerer_model
   - /agents/simple_agents/gaia_web_search@workforce_executor_agents.Web Search Agent
-  # - /agents/simple_agents/gaia_web_browsing@workforce_executor_agents.Web Browsing Agent
+  - /agents/simple_agents/gaia_web_browsing@workforce_executor_agents.Web Browsing Agent
   - /agents/simple_agents/gaia_document_processing@workforce_executor_agents.Document Processing Agent
   - /agents/simple_agents/gaia_reasoning_coding@workforce_executor_agents.Reasoning Coding Agent
   - _self_
@@ -21,8 +21,9 @@ workforce_executor_infos:
   - name: Web Search Agent
     description: A web information search specialist that excels at finding relevant information through search tools (Google, Wikipedia, archived pages) and extracting webpage content for understanding. Focuses on information discovery and identifying authoritative sources.
     toolnames: ["search_google", "parallel_search", "multi_query_deep_search", "extract_web_content", "extract_document_content"]
-  # - name: Web Browsing Agent
-  #   description: A web browsing specialist that excels at deep website navigation and interaction through browser simulation. Can perform complex browser actions like clicking, scrolling, form filling, and extracting content from JavaScript-rendered pages.
+  - name: Web Browsing Agent
+    description: A web browsing specialist that excels at deep website navigation and interaction through browser simulation. Can perform complex browser actions like clicking, scrolling, form filling, and extracting content from JavaScript-rendered pages.
+    toolnames: ["browser_visit_page", "browser_click", "browser_type", "browser_switch_tab", "browser_forward", "browser_back"]  # , "browser_open", "browser_close"
   - name: Document Processing Agent
     description: A helpful assistant that can process a variety of local and remote documents, including pdf, docx, images, audio, and video, etc.
     toolnames: ["extract_document_content", "extract_web_content", "execute_code"]

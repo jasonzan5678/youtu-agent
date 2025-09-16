@@ -1,3 +1,8 @@
+"""
+- [x] wrap browse toolkit from https://github.com/camel-ai/camel/blob/master/camel/toolkits/hybrid_browser_toolkit_py/hybrid_browser_toolkit.py
+- [ ] special logic for Web Search Agent
+"""
+
 from typing import Any
 
 from camel.models import ModelFactory
