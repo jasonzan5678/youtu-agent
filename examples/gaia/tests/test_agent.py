@@ -4,6 +4,7 @@ import asyncio
 
 from utu.agents import SimpleAgent, WorkforceAgent
 from utu.config import ConfigLoader
+from utu.eval.benchmarks import BaseBenchmark
 
 
 async def test_reasoning_coding_agent():
@@ -34,11 +35,32 @@ async def test_agent():
     print(recorder)
 
 
-async def test_main():
+async def test_browse_agent():
+    agent = SimpleAgent(config=ConfigLoader.load_agent_config("simple_agents/gaia_web_browsing.yaml"))
+    await agent.build()
+    print(f"agent with tools: {agent.tools}")
+    await agent.chat_streamed("What tools do you have?")
+    await agent.chat_streamed("总结 Anthropic 博客中关于 How to implement tool use 的内容")
+    await agent.cleanup()
+
+
+async def test_benchmark():
+    config = ConfigLoader.load_eval_config("gaia")
+    config.exp_id = "gaia_test_0916"
+    benchmark = BaseBenchmark(config)
+    benchmark.preprocess()
+    sample = benchmark.dataset.get_samples(limit=1)[0]
+    res = await benchmark.rollout_one(sample)
+    print(res.as_dict())
+
+
+async def main():
     # await test_reasoning_coding_agent()
     # await test_web_search_agent()
-    await test_agent()
+    # await test_agent()
+    await test_browse_agent()
+    # await test_benchmark()
 
 
 if __name__ == "__main__":
-    asyncio.run(test_main())
+    asyncio.run(main())

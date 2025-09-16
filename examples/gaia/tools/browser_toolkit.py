@@ -32,6 +32,7 @@ class BrowserToolkit(AsyncBaseToolkit):
             navigation_timeout=60000,
             default_timeout=60000,
             default_start_url="www.google.com",
+            # NOTE: the actual enabled tools in youtu-agent are set in YAML config!
             enabled_tools=[
                 # "browser_open",
                 "browser_visit_page",
