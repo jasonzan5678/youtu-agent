@@ -58,6 +58,9 @@
   padding: 8px;
   overflow-y: auto;
   height: 100%;
+  /* Hide scrollbar (Firefox & IE/Edge legacy) while keeping scroll */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
 .sidebar-button {
@@ -201,6 +204,75 @@
   align-items: center;
   margin-bottom: 8px;
   padding: 0 8px;
+}
+
+/* Left group: collapse button + title tightly together */
+.sidebar-section-left {
+  display: flex;
+  align-items: center;
+  gap: 0; /* no gap between button and title */
+}
+
+/* Make the collapse button sit flush with the title */
+.collapse-button {
+  padding: 0; /* remove internal padding to eliminate visual gap */
+  margin: 0;  /* ensure no margin between button and title */
+}
+
+/* Keep icon size consistent when padding is removed */
+.collapse-button i {
+  font-size: 0.9em;
+}
+
+/* Make the title look clickable when used to toggle collapse */
+.sidebar-section-title.clickable {
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sidebar-section-title.clickable:focus {
+  outline: none;
+}
+
+.sidebar-section-title.clickable:focus-visible {
+  outline: 2px solid var(--color-accent, #4a6cf7);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Collapse/Expand control row */
+.collapse-row {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  margin: 4px 0 8px 0;
+}
+
+.collapse-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 6px;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-subtle-text, #6c757d);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-size: 0.85em;
+}
+
+.collapse-action:hover {
+  background-color: var(--color-row-hover, #f1f1f1);
+  color: var(--color-accent, #4a6cf7);
+}
+
+.collapse-action i {
+  font-size: 0.9em;
 }
 
 .sidebar-section-title {
@@ -604,23 +676,14 @@
   to { opacity: 1; transform: translate(0, -50%); }
 }
 
-/* Scrollbar styling */
+/* Hide scrollbar (WebKit) while keeping scroll */
 .sidebar-content::-webkit-scrollbar {
-  width: 6px;
+  width: 0px;
+  height: 0px;
 }
-
-.sidebar-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar-content::-webkit-scrollbar-thumb {
-  background-color: var(--color-border, #e0e0e0);
-  border-radius: 3px;
-}
-
-.sidebar-content::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-subtle-text, #6c757d);
-}
+/* Also ensure track/thumb are invisible if rendered */
+.sidebar-content::-webkit-scrollbar-track { background: transparent; }
+.sidebar-content::-webkit-scrollbar-thumb { background: transparent; }
 
 /* Hamburger button styles */
 .hamburger-button {

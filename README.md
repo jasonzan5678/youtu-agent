@@ -98,6 +98,9 @@ Click on the images to view detailed videos.
   </tr>
 </table>
 
+> [!NOTE]
+> See the [`examples`](./examples) directory and [documentation](https://tencentcloudadp.github.io/youtu-agent/examples/) for more details.
+
 ### 🤖 Automatic Agent Generation
 
 A standout feature of `Youtu-Agent` is its ability to **automatically generate agent configurations**. In other frameworks, defining a task-specific agent often requires writing code or carefully crafting prompts. In contrast, `Youtu-Agent` uses simple YAML-based configs, which enables streamlined automation: a built-in "meta-agent" chats with you to capture requirements, then generates and saves the config automatically.
@@ -127,8 +130,8 @@ python scripts/cli_chat.py --stream --config generated/xxx
   </tr>
 </table>
 
-
-For more detailed examples and advanced use-cases, please refer to the [`examples`](./examples) directory and our comprehensive documentation at [`docs/examples.md`](./docs/examples.md).
+> [!NOTE]
+> See [documentation](https://tencentcloudadp.github.io/youtu-agent/auto_generation/) for more details.
 
 ## ✨ Features
 

@@ -20,6 +20,7 @@ wheels/
 *.xls
 *.pdf
 *.mp3
+*.mp4
 *.wav
 *.MOV
 *.xml
@@ -57,5 +58,5 @@ logs/
 # uv.lock
 .env
 test.yaml
-requirements.txt
+# requirements.txt
 GEMINI.md

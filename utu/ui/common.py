@@ -240,7 +240,7 @@ async def handle_tool_call_output(event: ag.RunItemStreamEvent) -> Event | None:
 async def handle_new_agent(event: ag.AgentUpdatedStreamEvent) -> Event | None:
     if event.new_agent:
         if hasattr(event.new_agent, "name"):
-            new_agent_name = f"{event.new_agent.name} ({event.new_agent.__class__.__name__})"
+            new_agent_name = f"{event.new_agent.name}"
         else:
             new_agent_name = event.new_agent.__class__.__name__
 

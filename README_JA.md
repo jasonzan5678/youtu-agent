@@ -74,6 +74,9 @@
   </tr>
 </table>
 
+> [!NOTE]
+> 詳細については、[`examples`](./examples)ディレクトリと[ドキュメント](https://tencentcloudadp.github.io/youtu-agent/examples/)を参照してください。
+
 ### 🤖 自動エージェント生成
 
 `Youtu-Agent`の顕著な利点は、**エージェントとその設定を自動生成**する機能にあります。他のフレームワークでは、特定のタスクを実行するエージェントを定義するために通常コードを記述するかプロンプトを慎重に設計する必要がありますが、Youtu-AgentはYAMLベースのシンプルな設定方式を採用しており、効率的な自動化を実現します。内蔵のメタエージェントがユーザーと対話して要望を把握すると、自動的にエージェント設定を生成して保存します。
@@ -97,7 +100,8 @@ python scripts/cli_chat.py --stream --config generated/xxx
   </tr>
 </table>
 
-より詳細な例や高度な使用例については、[`examples`](./examples)ディレクトリおよびドキュメント[`docs/examples.md`](./docs/examples.md)をご覧ください。
+> [!NOTE]
+> 詳細については、[ドキュメント](https://tencentcloudadp.github.io/youtu-agent/auto_generation/)を参照してください。
 
 ## ✨ 特徴
 

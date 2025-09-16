@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './SideBar.css';
 import type { Message } from '../types/message';
+import { useTranslation } from 'react-i18next';
 
 interface SideBarProps {
   isOpen: boolean;
@@ -88,6 +89,17 @@ const SideBar: React.FC<SideBarProps> = ({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const COLLAPSE_STORAGE_KEY = 'sidebar.availableConfigsCollapsed';
+  const [isConfigsCollapsed, setIsConfigsCollapsed] = useState<boolean>(() => {
+    try {
+      if (typeof window === 'undefined') return false;
+      const saved = window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
+      return saved === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const { t } = useTranslation();
   const filteredConfigs = availableConfigs
     .filter(config => config.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => getFilename(a).localeCompare(getFilename(b)));
@@ -119,6 +131,17 @@ const SideBar: React.FC<SideBarProps> = ({
     };
   }, [isOpen, onClose]);
 
+  // Persist collapse state to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(COLLAPSE_STORAGE_KEY, String(isConfigsCollapsed));
+      }
+    } catch {
+      // noop
+    }
+  }, [isConfigsCollapsed]);
+
   const handleNewChat = () => {
     window.open(window.location.href, '_blank');
   };
@@ -137,7 +160,7 @@ const SideBar: React.FC<SideBarProps> = ({
                 onClick={handleNewChat}
               >
                 <i className="fas fa-plus" />
-                New Chat
+                {t('sidebar.newChat')}
               </button>
             </div>
             
@@ -147,7 +170,7 @@ const SideBar: React.FC<SideBarProps> = ({
         
         {/* Agent History Section */}
         <div className="sidebar-section">
-          <div className="sidebar-section-title">AGENT HISTORY</div>
+          <div className="sidebar-section-title">{t('sidebar.agentHistoryTitle')}</div>
           <div className="agent-toc-list">
             {messages.filter(msg => msg.type === 'new_agent' && typeof msg.content === 'string').length > 0 ? (
               messages
@@ -164,7 +187,7 @@ const SideBar: React.FC<SideBarProps> = ({
                 ))
             ) : (
               <div className="sidebar-button-text" style={{ padding: '8px 16px', color: 'var(--color-subtle-text, #6c757d)' }}>
-                No history
+                {t('sidebar.noHistoryShort')}
               </div>
             )}
           </div>
@@ -175,7 +198,7 @@ const SideBar: React.FC<SideBarProps> = ({
         {/* Current Config Section */}
         {currentConfig ? (
           <div className="sidebar-section">
-            <div className="sidebar-section-title">CURRENT CONFIG</div>
+            <div className="sidebar-section-title">{t('sidebar.currentConfigTitle')}</div>
             <div className="current-config-display">
               <div className="current-config-header">
                 <i className="fas fa-check-circle"></i>
@@ -186,7 +209,7 @@ const SideBar: React.FC<SideBarProps> = ({
             </div>
             {agentType === 'orchestra' && subAgents && subAgents.length > 0 && (
               <div className="sub-agents-section">
-                <div className="sub-agents-title">Sub-Agents</div>
+                <div className="sub-agents-title">{t('sidebar.subAgentsTitle')}</div>
                 <div className="sub-agents-list">
                   {subAgents.map((agent, index) => (
                     <div key={index} className="sub-agent-item">
@@ -202,7 +225,7 @@ const SideBar: React.FC<SideBarProps> = ({
               onClick={handleAddConfig}
             >
               <i className="fas fa-plus" style={{ marginRight: '6px' }}></i>
-              Add New Config
+              {t('sidebar.addNewConfig')}
             </div>
           </div>
         ) : null}
@@ -214,7 +237,11 @@ const SideBar: React.FC<SideBarProps> = ({
             {/* Available Configs Section */}
             <div className="sidebar-section">
               <div className="sidebar-section-header">
-                <div className="sidebar-section-title">AVAILABLE CONFIGS</div>
+                <div className="sidebar-section-left">
+                  <div className="sidebar-section-title">
+                    {t('sidebar.availableConfigsTitle')}
+                  </div>
+                </div>
                 <button 
                   className={`refresh-button ${isRefreshing ? 'refreshing' : ''}`}
                   onClick={() => {
@@ -223,61 +250,84 @@ const SideBar: React.FC<SideBarProps> = ({
                     setTimeout(() => setIsRefreshing(false), 1000);
                   }}
                   disabled={isRefreshing}
-                  title="Refresh configs"
+                  title={t('sidebar.refreshConfigs')}
                 >
                   <i className="fas fa-sync-alt" />
                 </button>
               </div>
+              {/* Search box should stay visible regardless of collapse state */}
               <div className="search-box-container" style={{ marginBottom: '12px' }}>
                 <div className="search-box">
                   <i className="fas fa-search search-icon" />
                   <input
                     type="text"
-                    placeholder="Search configs..."
+                    placeholder={t('sidebar.searchConfigs')}
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onFocus={() => {
+                      if (isConfigsCollapsed) setIsConfigsCollapsed(false);
+                    }}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSearchTerm(val);
+                      if (val && isConfigsCollapsed) setIsConfigsCollapsed(false);
+                    }}
                     className="search-input"
                   />
                   {searchTerm && (
                     <button 
                       className="clear-search" 
                       onClick={() => setSearchTerm('')}
-                      title="Clear search"
+                      title={t('sidebar.clearSearch')}
                     >
                       <i className="fas fa-times" />
                     </button>
                   )}
                 </div>
               </div>
-              <div className="config-list">
-                {filteredConfigs.length > 0 ? (
-                  filteredConfigs.map((config) => (
-                    <Tooltip key={config} content={config}>
-                      <div
-                        className={`config-toc-item ${currentConfig === config ? 'active' : ''}`}
-                        onClick={() => onConfigSelect(config)}
-                      >
-                        <div className="config-list-item">
-                          <div className="config-icon-container">
-                            {config.includes('generated/') ? (
-                              <i className="fas fa-robot config-icon" title="自动生成配置" />
-                            ) : config.includes('examples/') ? (
-                              <i className="fas fa-flask config-icon" title="示例配置" />
-                            ) : null}
-                          </div>
-                          <span className="config-name">
-                            {getFilename(config)}
-                          </span>
-                        </div>
-                      </div>
-                    </Tooltip>
-                  ))
-                ) : (
-                  <div className="sidebar-button-text" style={{ padding: '8px 16px', color: 'var(--color-subtle-text, #6c757d)' }}>
-                    {availableConfigs.length === 0 ? 'No configs available' : 'No matching configs found'}
-                  </div>
-                )}
+              {/* Collapse/Expand control on its own row */}
+              <div className="collapse-row">
+                <button
+                  className="collapse-action"
+                  onClick={() => setIsConfigsCollapsed(prev => !prev)}
+                  aria-expanded={!isConfigsCollapsed}
+                >
+                  <i className={`fas ${isConfigsCollapsed ? 'fa-chevron-right' : 'fa-chevron-down'}`} />
+                  <span>{isConfigsCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}</span>
+                </button>
               </div>
+              {!isConfigsCollapsed && (
+                <>
+                  <div className="config-list">
+                    {filteredConfigs.length > 0 ? (
+                      filteredConfigs.map((config) => (
+                        <Tooltip key={config} content={config}>
+                          <div
+                            className={`config-toc-item ${currentConfig === config ? 'active' : ''}`}
+                            onClick={() => onConfigSelect(config)}
+                          >
+                            <div className="config-list-item">
+                              <div className="config-icon-container">
+                                {config.includes('generated/') ? (
+                                  <i className="fas fa-robot config-icon" title={t('sidebar.generatedConfigTooltip')} />
+                                ) : config.includes('examples/') ? (
+                                  <i className="fas fa-flask config-icon" title={t('sidebar.exampleConfigTooltip')} />
+                                ) : null}
+                              </div>
+                              <span className="config-name">
+                                {getFilename(config)}
+                              </span>
+                            </div>
+                          </div>
+                        </Tooltip>
+                      ))
+                    ) : (
+                      <div className="sidebar-button-text" style={{ padding: '8px 16px', color: 'var(--color-subtle-text, #6c757d)' }}>
+                        {availableConfigs.length === 0 ? t('sidebar.noConfigsShort') : t('sidebar.noMatchingConfigs')}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </>
         )}

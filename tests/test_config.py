@@ -17,6 +17,7 @@ def test_load_toolkit_config():
     config = ConfigLoader.load_toolkit_config("search")
     config = ConfigLoader.load_toolkit_config("document")
     config = ConfigLoader.load_toolkit_config("python_executor")
+    config = ConfigLoader.load_toolkit_config("generated/download_bilibili_video")
     print(config)
 
 

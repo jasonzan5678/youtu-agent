@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 
 import prompt_toolkit
@@ -87,3 +88,7 @@ class PrintUtils:
         flush: bool = True,
     ):
         PrintUtils.print_info(msg, color=color, add_prefix=add_prefix, prefix=prefix, end=end, flush=flush)
+
+    @staticmethod
+    def format_json(obj: dict, indent: int = None) -> str:
+        return json.dumps(obj, indent=indent, ensure_ascii=False)

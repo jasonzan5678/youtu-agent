@@ -34,6 +34,7 @@ async def main():
             config.toolkits[tool_name] = ConfigLoader.load_toolkit_config(tool_name)
 
     async with SimpleAgent(config=config) as agent:
+        # TODO: use an unified trace_id, or use session
         while True:
             user_input = await PrintUtils.async_print_input("> ")
             if user_input.lower() in ["exit", "quit", "q"]:

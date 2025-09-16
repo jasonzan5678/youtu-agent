@@ -1,0 +1,110 @@
+SETP_1_REQUIREMENT: |
+  User Requirement:
+  "{{ user_request }}"
+
+  Task:
+  Generate a function schema that represents this requirement. The schema must include:
+  - name: a concise function name (snake_case)
+  - description: a short English description of what the function does
+
+  Output ONLY JSON, example format:
+  ```json
+  {
+      "name": "download_bilibili_video",
+      "description": "Download a video from Bilibili given its URL."
+  }
+  ```
+
+SETP_2_IMPLEMENTATION: |
+  Task:
+  Generate a Python class implementing this function. Requirements:
+  - Use asyncio if needed
+  - Include minimal error handling
+  - Do NOT include extra explanations, only code
+
+  Example:
+  ```python
+  import yt_dlp
+
+  class DownloadBilibiliVideo:
+      def download_video(self, url: str, output_path: str = None) -> str:
+          """Download a Bilibili video
+
+          Args:
+              url (str): The URL of the video to download.
+              output_path (str, optional): The path to save the downloaded video. Defaults to None.
+          """
+          ydl_opts = {"format": "bestvideo+bestaudio/best"}
+          if output_path:
+              ydl_opts["outtmpl"] = output_path
+          with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+              ydl.download([url])
+          return f"Downloaded video to {output_path}"
+  ```
+
+  Output:
+  Complete Python code for `runner.py`
+
+SETP_3_MANIFEST: |
+  Task:
+  Generate a manifest.json for this MCP tool with fields:
+  - class_name
+  - requirements
+  - methods
+
+  Output ONLY valid JSON, example:
+  ```json
+  {
+      "class_name": "DownloadBilibiliVideo",
+      "requirements": ["yt-dlp"],
+      "methods": ["download_video"],
+  }
+  ```
+
+TEMPLATE_MAIN: |
+  import importlib
+  import json
+  import pathlib
+
+  from mcp.server.fastmcp import FastMCP
+
+  schema = json.loads(pathlib.Path("manifest.json").read_text())
+
+  cls_module = importlib.import_module("runner")
+  inst = getattr(cls_module, schema["impl_class_name"])()
+
+  mcp = FastMCP(schema["impl_class_name"])
+  for method in schema["impl_methods"]:
+      mcp.add_tool(
+          fn=getattr(inst, method),
+          name=method,
+      )
+
+  if __name__ == "__main__":
+      mcp.run()
+
+
+TEMPLATE_MANIFEST: |
+  {
+      "name": "{{ name }}",
+      "command": ".venv/bin/python",
+      "args": ["main.py"],
+      "transport": "stdio",
+      "impl_fn": "runner.py",
+      "impl_class_name": "{{ class_name }}",
+      "impl_requirements": {{ requirements }},
+      "impl_methods": {{ methods }}
+  }
+
+TEMPLATE_CONFIG: |
+  # @package _global_
+
+  name: {{ name }}
+  mode: mcp
+  activated_tools: null
+  mcp_transport: stdio
+  mcp_client_session_timeout_seconds: 20
+  config:
+    command: .venv/bin/python
+    args: ["main.py"]
+    cwd: configs/tools/generated/{{ name }}

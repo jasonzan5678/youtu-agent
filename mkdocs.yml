@@ -117,6 +117,7 @@ nav:
     - Tools: tools.md
     - Evaluation: eval.md
     - WebUI: frontend.md
+    - Automatic Generation: auto_generation.md
   - Examples: 
     - Examples: examples.md
     - Examples Output:

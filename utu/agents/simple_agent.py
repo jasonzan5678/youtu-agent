@@ -253,9 +253,6 @@ class SimpleAgent(BaseAgent):
     def run_streamed(self, input: str | list[TResponseInputItem], trace_id: str = None) -> RunResultStreaming:
         """Entrypoint for running the agent streamly
 
-        Notes:
-            - do not support `save` option for now
-
         Args:
             trace_id: str to identify the run
         """
@@ -264,6 +261,8 @@ class SimpleAgent(BaseAgent):
         trace_id = trace_id or AgentsUtils.gen_trace_id()
         logger.info(f"> trace_id: {trace_id}")
 
+        if isinstance(input, str):
+            input = self.input_items + [{"content": input, "role": "user"}]
         run_kwargs = self._prepare_run_kwargs(input)
         if AgentsUtils.get_current_trace():
             return Runner.run_streamed(**run_kwargs)
@@ -274,15 +273,13 @@ class SimpleAgent(BaseAgent):
     # util apis
     async def chat(self, input: str) -> RunResult:
         # TODO: set "session-level" tracing for multi-turn chat
-        self.input_items.append({"content": input, "role": "user"})
-        recorder = await self.run(self.input_items, save=True)
+        recorder = await self.run(input, save=True)
         run_result = recorder.get_run_result()
         AgentsUtils.print_new_items(run_result.new_items)
         return run_result
 
     async def chat_streamed(self, input: str) -> RunResultStreaming:
-        self.input_items.append({"content": input, "role": "user"})
-        run_result_streaming = self.run_streamed(self.input_items)
+        run_result_streaming = self.run_streamed(input)
         await AgentsUtils.print_stream_events(run_result_streaming.stream_events())
         self.input_items = run_result_streaming.to_input_list()
         self.current_agent = run_result_streaming.last_agent

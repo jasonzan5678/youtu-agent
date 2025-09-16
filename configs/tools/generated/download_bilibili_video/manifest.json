@@ -1,0 +1,10 @@
+{
+    "name": "download_bilibili_video",
+    "command": ".venv/bin/python",
+    "args": ["main.py"],
+    "transport": "stdio",
+    "impl_fn": "runner.py",
+    "impl_class_name": "DownloadBilibiliVideo",
+    "impl_requirements": ["yt-dlp"],
+    "impl_methods": ["download_video"]
+}
