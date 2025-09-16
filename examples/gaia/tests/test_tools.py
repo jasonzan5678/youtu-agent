@@ -1,6 +1,7 @@
 import asyncio
 
 from examples.gaia.tools.audio_analysis_toolkit import AudioAnalysisToolkit
+from examples.gaia.tools.browser_toolkit import BrowserToolkit
 from examples.gaia.tools.code_execution_toolkit import CodeExecutionToolkit
 from examples.gaia.tools.document_processing_toolkit import DocumentProcessingToolkit
 from examples.gaia.tools.excel_toolkit import ExcelToolkit
@@ -80,7 +81,7 @@ async def test_document_processing_toolkit():
 
 
 async def test_search_toolkit():
-    config = ConfigLoader.load_toolkit_config("arxiv")
+    config = ConfigLoader.load_toolkit_config("search")
     search_toolkit = SearchToolkit(config)
 
     res = await search_toolkit.search_google("What is the capital of France?")
@@ -91,14 +92,25 @@ async def test_search_toolkit():
     print(f"> res: {res}")
 
 
-async def test_main():
+async def test_browser_toolkit():
+    config = ConfigLoader.load_toolkit_config("document")
+    browser_toolkit = BrowserToolkit(config)
+
+    res = await browser_toolkit.browser_open()
+    print(f"> res: {res}")
+    res = await browser_toolkit.browser_visit_page("https://github.com/TencentCloudADP/Youtu-agent")
+    print(f"> res: {res}")
+
+
+async def main():
     # await test_excel_toolkit()
     # await test_code_execution_toolkit()
     # await test_image_analysis_toolkit()
     # await test_audio_analysis_toolkit()
     # await test_document_processing_toolkit()
-    await test_search_toolkit()
+    # await test_search_toolkit()
+    await test_browser_toolkit()
 
 
 if __name__ == "__main__":
-    asyncio.run(test_main())
+    asyncio.run(main())
