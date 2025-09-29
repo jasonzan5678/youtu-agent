@@ -25,7 +25,7 @@ async def main(args):
         from training_free_grpo.web.verify import verify_func
         from training_free_grpo.web.prompts import PROBLEM_WITH_EXPERIENCE_TEMPLATE
         from training_free_grpo.web.experience import ExperienceUpdater
-        config_name = "simple/search_agent.yaml"
+        config_name = "simple/base_search.yaml"
     else:
         raise ValueError(f"Unsupported domain: {args.domain}")
     
