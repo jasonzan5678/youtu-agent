@@ -14,7 +14,9 @@ class Subtask:
     )
     task_result: str = None
     task_result_detailed: str = None
+    task_mode: str = None # ["ASSIGN_AGENT", "DIRECT_ANSWER"]
     assigned_agent: str = None
+    task_direct_answer: str = None  # for DIRECT_ANSWER mode
 
     @property
     def formatted_with_result(self) -> str:
@@ -33,6 +35,7 @@ class WorkforceTaskRecorder(TaskRecorder):
     executor_agent_kwargs_list: list[dict] = field(default_factory=list)
     task_plan: list[Subtask] = field(default_factory=list)
     failure_info: str = ""
+    experience_from_failure: str = ""
 
     tentative_answer: str = ""
     tentative_answer_confidence: str = ""
@@ -77,21 +80,13 @@ class WorkforceTaskRecorder(TaskRecorder):
         self.task_plan = finished_tasks + new_tasks
 
     # -----------------------------------------------------------
-    @property
-    def has_uncompleted_tasks(self) -> bool:
+    def get_next_task(self) -> Subtask | None:
         if self.task_plan is None:
-            return False
-        for task in self.task_plan:
-            if task.task_status == "not started":
-                return True
-        return False
-
-    def get_next_task(self) -> Subtask:
-        assert self.task_plan is not None, "No task plan available."
+            return None
         for task in self.task_plan:
             if task.task_status == "not started":
                 return task
-        return "No uncompleted tasks."
+        return None
 
     @property
     def has_failed_task(self) -> bool:
@@ -102,6 +97,9 @@ class WorkforceTaskRecorder(TaskRecorder):
     # -----------------------------------------------------------
     def update_failure_info(self, failure_info: str) -> None:
         self.failure_info = failure_info
+    
+    def update_experience_from_failure(self, experience_from_failure: str) -> None:
+        self.experience_from_failure = experience_from_failure
 
     def update_tentative_answer(self, answer: str, confidence: str, uniqueness_assessment: str) -> None:
         self.tentative_answer = answer
@@ -116,8 +114,8 @@ class WorkforceTaskRecorder(TaskRecorder):
         failure_reasons = []
         if not answer_quality_acceptable:
             if self.tentative_answer_confidence == "low":
-                failure_reasons.append(f"low confidence ({self.tentative_answer_confidence})")
+                failure_reasons.append("answer confidence too low")
             if self.tentative_answer_uniqueness_assessment in ["unclear", "non-unique"]:
-                failure_reasons.append(f"answer not unique ({self.tentative_answer_uniqueness_assessment})")
+                failure_reasons.append("answer uniqueness insufficient")
         failure_reason = " and ".join(failure_reasons)
         return answer_quality_acceptable, failure_reason

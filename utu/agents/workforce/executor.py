@@ -42,7 +42,8 @@ class ExecutorAgent:
                 self.executor_agent.clear_input_items()  # clear chat history!
 
                 # * 1. Task execution
-                if tries == 1:
+                if (tries == 1) or (not self.reflection_history):
+                    # first try, no reflection
                     user_prompt = PROMPTS["TASK_EXECUTE_USER_PROMPT"].format(
                         overall_task=recorder.overall_task,
                         overall_plan=recorder.formatted_task_plan,
@@ -50,6 +51,7 @@ class ExecutorAgent:
                         task_description=task.task_description,
                     )
                 else:
+                    # with reflection history
                     user_prompt = PROMPTS["TASK_EXECUTE_WITH_REFLECTION_USER_PROMPT"].format(
                         overall_task=recorder.overall_task,
                         overall_plan=recorder.formatted_task_plan,
@@ -62,17 +64,20 @@ class ExecutorAgent:
 
                 # * 2. Task check
                 task_check_prompt = PROMPTS["TASK_CHECK_PROMPT"].format(
-                    task_name=task.task_name,
+                    overall_task=recorder.overall_task,
+                    current_task_name=task.task_name,
                     task_description=task.task_description,
                 )
                 response_content = await self.executor_agent.run(task_check_prompt)  # do not save chat history!
+                # if check passed, break the loop
                 if self._parse_task_check_result(response_content.final_output):
                     logger.info(f"Task '{task.task_name}' completed successfully.")
                     break
 
                 # * 3. Task reflection (when failed)
                 reflection_prompt = PROMPTS["TASK_REFLECTION_PROMPT"].format(
-                    task_name=task.task_name,
+                    overall_task=recorder.overall_task,
+                    current_task_name=task.task_name,
                     task_description=task.task_description,
                 )
                 reflection_res = await self.executor_agent.run(reflection_prompt)  # do not save chat history!
@@ -92,12 +97,10 @@ class ExecutorAgent:
         if executor_res is None:
             logger.error(f"Task `{task.task_name}` execution failed after {tries} attempts!")
             task.task_result = final_result
-            task.task_status = "failed"
             return
 
         recorder.add_run_result(executor_res.get_run_result(), "executor")  # add executor trajectory
         task.task_result = final_result
-        task.task_status = "completed"
 
         if self.return_summary:
             # WARNING: reset instructions is dangerous! DONOT use here!

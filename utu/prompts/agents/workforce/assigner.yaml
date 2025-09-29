@@ -9,7 +9,7 @@ TASK_ASSIGN_SYS_PROMPT: |
   The following sub-tasks have been planned with their current completion status:
   {task_plan}
   </task_plan_with_status>
-
+  {experience_from_failure}
   <available_agents>
   You can assign the next task to one of the following available agents:
   {executor_agents_info}
@@ -28,24 +28,38 @@ TASK_ASSIGN_USER_PROMPT: |
   {next_task}
   </next_task>
 
-  <available_agents_names>
-  You can only choose one from the following agents:
+  <available_agents>
   {executor_agents_names}
-  </available_agents_names>
+  </available_agents>
 
-  Based on the next task that needs to be executed and the available agents, analyze what type of work is required and select the most appropriate agent from the available options.
+  Based on the next task that needs to be executed, analyze what type of work is required:
+
+  1. **Simple tasks that can be answered directly**: If the task is straightforward and can be completed based on the available context without requiring specialized agent capabilities (e.g., simple information extraction, basic analysis, or direct answers from provided materials), you can choose to provide a direct answer.
+
+  2. **Complex tasks requiring agent specialization**: If the task requires specific skills, tools, or specialized capabilities, select the most appropriate agent from the available options.
 
   Please consider:
+  - Task complexity and whether it requires specialized agent capabilities
   - What skills and capabilities are needed for this specific task
   - Which agent from the available list would be best suited for this type of work
   - The nature and requirements of the task to make the optimal assignment
 
-  IMPORTANT: The assigned agent will NOT have access to information from other agents or the overall task context. Therefore, your detailed_task_description must be completely self-contained and include ALL necessary information, context, requirements, and dependencies that the agent needs to successfully complete the task independently.
+  IMPORTANT: 
+  - If you assign to an agent, that agent will NOT have access to information from other agents or the overall task context. Therefore, your detailed_task_description must be completely self-contained and include ALL necessary information.
+  - If you choose direct answer mode, provide the complete answer directly in the direct_answer field.
 
-  Provide your assignment decision in the following XML format:
+  CRITICAL REQUIREMENT FOR detailed_task_description: 
+  - Only include information that is explicitly provided and confirmed in the available context
+  - Do not add any uncertain, speculative, or unverified information
+  - Ensure all mentioned details are accurate and based on the given materials
+  - Do not make assumptions about missing information or add details not present in the source
+
+  Provide your decision in the following XML format:
 
   <assignment>
-  <reasoning>[analyze what skills and capabilities are needed for this task, and explain your decision-making process]</reasoning>
-  <selected_agent>[agent_name]</selected_agent>
-  <detailed_task_description>[provide a comprehensive, self-contained description of what needs to be done. Include ALL relevant context, background information, specific requirements, expected outputs, dependencies, and any other information the agent needs to complete the task successfully without access to other agents' work or the broader task context]</detailed_task_description>
+  <reasoning>[analyze the task complexity and explain whether it requires agent specialization or can be answered directly, then explain your decision-making process]</reasoning>
+  <mode>[ASSIGN_AGENT or DIRECT_ANSWER]</mode>
+  <selected_agent>[agent_name if mode is ASSIGN_AGENT, otherwise leave empty]</selected_agent>
+  <detailed_task_description>[if mode is ASSIGN_AGENT: provide a comprehensive, self-contained description based ONLY on accurate information]</detailed_task_description>
+  <direct_answer>[if mode is DIRECT_ANSWER: provide the complete answer to the task based on available context]</direct_answer>
   </assignment>

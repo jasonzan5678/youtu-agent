@@ -1,3 +1,6 @@
+TASK_PLAN_SYS_PROMPT: |
+  You are a planning agent that masters task decomposition and planning.
+
 TASK_PLAN_PROMPT: |
   You need to split the given task into subtasks according to the agents available in the group.
 
@@ -12,11 +15,13 @@ TASK_PLAN_PROMPT: |
   ## Task Decomposition Rules
 
   ### Core Principles
+  - The overall_task must have a unique and definitive answer - ensure subtasks work toward finding this specific answer
   - Create concise, action-oriented subtasks that directly produce concrete outputs
   - Each subtask should be executable by available agents without further decomposition
   - For knowledge-based tasks, explicitly include web search steps to retrieve current information
   - For reasoning/code tasks that don't need external knowledge, delegate the entire reasoning/code generation as one subtask
   - Final subtask must transform results into the exact format requested by the original task
+  - **Do not over-complicate tasks - prioritize efficiency and straightforward approaches over complex multi-step processes**
 
   ### When to Use Code vs Tools
   Use code execution for:
@@ -27,7 +32,7 @@ TASK_PLAN_PROMPT: |
   When code is needed, remind the agent to execute the code and report results.
 
   ### Subtask Guidelines
-  - Keep subtasks brief and specific (avoid lengthy descriptions)
+  - Keep subtasks brief and specific, without agent name in the description (avoid lengthy descriptions)
   - Match subtasks to agent capabilities (search tasks → search agents, code tasks → coding agents)
   - Use 2-3 subtasks for simple tasks, 4-6 for complex multi-step tasks
   - For multi-step information retrieval, break into logical dependency chains
@@ -35,7 +40,11 @@ TASK_PLAN_PROMPT: |
   - Add verification subtask when accuracy is critical
 
   ### Output Format
-  Return subtasks in this exact format:
+  Return analysis and subtasks in this exact format:
+
+  <analysis>
+  [Analyze the task complexity and determine whether it requires specialized agent coordination or can be handled more directly. Consider: 1) Information requirements - what specific knowledge, data sources, or capabilities are needed? 2) Task dependencies - which steps must be completed before others can begin? 3) Agent specialization needs - which tasks require specific agent capabilities (search, coding, analysis)? 4) Complexity assessment - is this a simple lookup, complex multi-step research, or computational task? 5) Optimal approach - explain your strategy for decomposition and why this approach will be most effective.]
+  </analysis>
 
   <tasks>
   <task>Brief, specific subtask 1</task>
@@ -63,19 +72,44 @@ TASK_REPLAN_PROMPT: |
   ## Task Replanning Rules
 
   ### Core Principles
+  - The overall_task must have a unique and definitive answer - ensure subtasks work toward finding this specific answer
   - Create concise, action-oriented subtasks that directly produce concrete outputs
   - Each subtask should be executable by available agents without further decomposition
   - For knowledge-based tasks, explicitly include web search steps to retrieve current information
   - For reasoning/code tasks that don't need external knowledge, delegate the entire reasoning/code generation as one subtask
   - Final subtask must transform results into the exact format requested by the original task
   - **Learn from previous failures and adjust the approach accordingly**
+  - **Do not over-complicate tasks - prioritize efficiency and straightforward approaches over complex multi-step processes**
 
-  ### Failure Analysis Integration
-  - Identify root causes from failure information (insufficient info, wrong tools, incorrect sequencing)
-  - Avoid repeating the same mistakes by adjusting task breakdown or approach
-  - Consider alternative methods if previous approach was too broad
-  - Add verification steps if previous attempts lacked quality control
-  - Break complex tasks into smaller pieces if previous attempts failed due to complexity
+  ### Failure-Informed Planning Strategy
+
+  **Step 1: Analyze the Failure Information**
+  - Identify the primary failure points and root causes mentioned in the failure analysis
+  - Note specific issues with task granularity, sequencing, agent mismatches, or information gaps
+  - Understand which subtasks worked well and should be preserved or adapted
+  - Pay attention to recommended alternative approaches and strategic insights
+
+  **Step 2: Apply Failure Lessons to New Plan**
+  - **Task Restructuring**: If failure info indicates granularity problems, adjust task size accordingly
+    - Split overly broad tasks that caused confusion or incomplete execution
+    - Merge overly narrow tasks that created unnecessary complexity
+  - **Sequencing Optimization**: Reorder tasks based on identified dependency issues
+    - Ensure prerequisite information is gathered before dependent tasks
+    - Add intermediate verification steps where the analysis suggests they were missing
+  - **Agent-Task Alignment**: Better match subtasks to agent capabilities based on previous mismatches
+    - Route search tasks to search-capable agents
+    - Assign code/analysis tasks to appropriate coding agents
+    - Avoid capability mismatches that caused previous failures
+  - **Information Strategy**: Address identified information gaps
+    - Add explicit search steps for missing knowledge requirements
+    - Include verification subtasks when accuracy was previously lacking
+    - Consider alternative information sources if original approach failed
+
+  **Step 3: Implement Recommended Improvements**
+  - Incorporate specific alternative approaches suggested in the failure analysis
+  - Add quality checkpoints and progress indicators as recommended
+  - Include fallback strategies where appropriate
+  - Focus on the success criteria outlined in the failure reflection
 
   ### When to Use Code vs Tools
   Use code execution for:
@@ -85,17 +119,22 @@ TASK_REPLAN_PROMPT: |
   - Repetitive query tasks
   When code is needed, remind the agent to execute the code and report results.
 
-  ### Subtask Guidelines
-  - Keep subtasks brief and specific (avoid lengthy descriptions)
-  - Match subtasks to agent capabilities (search tasks → search agents, code tasks → coding agents)
+  ### Enhanced Subtask Guidelines
+  - Keep subtasks brief and specific, without agent name in the description
+  - Match subtasks to agent capabilities based on lessons from previous failures
   - Use 2-3 subtasks for simple tasks, 4-6 for complex multi-step tasks
   - For multi-step information retrieval, break into logical dependency chains
   - Target specific sources mentioned in the task (YouTube, Nature, etc.)
-  - Add verification subtask when accuracy is critical
-  - Consider alternative approaches based on what failed previously
+  - **Mandatory**: Add verification subtasks when previous attempts failed due to quality issues
+  - **Priority**: Address the specific failure categories identified in the analysis
+  - Build upon successful elements from previous attempts while avoiding repeated mistakes
 
   ### Output Format
-  Return subtasks in this exact format:
+  Return failure analysis, revised subtasks, and experience in this exact format:
+
+  <analysis>
+  [Based on the failure information provided, analyze: 1) Root causes of the previous failure and how they inform the new approach; 2) Task complexity reassessment - what specific knowledge, data sources, or capabilities are actually needed based on lessons learned; 3) Revised task dependencies - how should the sequence be adjusted based on identified issues; 4) Agent specialization requirements - which tasks need specific agent capabilities based on previous mismatches; 5) Failure-informed strategy - explain your revised decomposition approach and why it addresses the specific failure points identified.]
+  </analysis>
 
   <tasks>
   <task>Brief, specific subtask 1</task>
@@ -103,7 +142,11 @@ TASK_REPLAN_PROMPT: |
   <task>Brief, specific subtask 3</task>
   </tasks>
 
-  Make each subtask actionable and concise - focus on what needs to be done, not how to do it.
+  <helpful_experience_or_fact>
+  Summarize the key practical insights from this failed attempt that future agents can directly apply to save time and avoid repeating mistakes. This is the ONLY information future agents will have access to from this attempt, so include ALL critical details. Cover: 1) Verified facts, data points, or answers discovered during execution that are correct and reusable; 2) Effective search terms, query strategies, specific URLs, APIs, or information sources that worked or failed; 3) Confirmed dead-ends, approaches, or tools to completely avoid; 4) Working code snippets, algorithms, or technical methods that can be directly reused; 5) Specific agent capabilities or limitations discovered during execution; 6) Critical timing, sequencing, or dependency insights for task ordering; 7) Quality control or verification methods that proved essential; 8) Alternative approaches identified but not tested that show promise; 9) Specific error patterns, failure modes, or edge cases encountered; 10) Resource constraints, rate limits, or technical barriers discovered. Write as natural text without bullet points - focus on actionable intelligence that completely eliminates trial-and-error for subsequent agents working on similar tasks.
+  </helpful_experience_or_fact>
+
+  **Important**: Each subtask should directly address lessons learned from the failure analysis. Focus on what needs to be done differently, not just what needs to be done.
 
 TASK_CHECK_PROMPT: |
   You are a task verification coordinator responsible for evaluating whether a completed subtask has achieved its intended goal within the context of the overall mission.
@@ -140,30 +183,30 @@ TASK_CHECK_PROMPT: |
   Please evaluate the subtask completion based on these criteria:
 
   ### Success Criteria
-  - **Complete Achievement**: The subtask fully accomplished its stated objective
-  - **Quality Standards**: The result meets expected quality and accuracy requirements  
-  - **Integration**: The output can be effectively used by subsequent subtasks
-  - **Alignment**: The result directly supports the overall mission goals
+  - **Substantial Achievement**: The subtask accomplished its main objective or made significant progress
+  - **Reasonable Quality**: The result meets basic quality requirements and is generally usable  
+  - **Practical Value**: The output provides useful information or capabilities for subsequent subtasks
+  - **Mission Support**: The result contributes meaningfully toward the overall mission goals
 
   ### Evaluation Categories
 
   **SUCCESS**: Choose this when:
-  - All stated objectives of the subtask were fully achieved
-  - The output quality is satisfactory and usable
-  - No critical information or steps are missing
-  - The result clearly advances progress toward the overall goal
+  - The main objective of the subtask was achieved or substantially completed
+  - The output quality is reasonable and practically usable
+  - The result provides valuable information or capabilities for the next steps
+  - Clear progress was made toward the overall goal, even if not perfect
 
   **PARTIAL SUCCESS**: Choose this when:
-  - The subtask achieved some but not all of its objectives
-  - Useful information was obtained, but with gaps or limitations
-  - The result is partially usable but may need refinement
-  - Progress was made but the subtask needs additional work
+  - The subtask achieved some meaningful progress but fell short of full completion
+  - Useful information was obtained, but with notable gaps or limitations that don't prevent progress
+  - The result is partially usable and can contribute to the overall mission with some adaptation
+  - Some progress was made but additional work may be needed
 
   **FAILED**: Choose this when:
-  - The subtask failed to achieve its primary objective
-  - The output is unusable or severely inadequate
-  - Critical errors occurred that prevent progress
-  - The result does not contribute meaningfully to the overall goal
+  - The subtask failed to make meaningful progress toward its objective
+  - The output is largely unusable or contains significant errors that prevent progress
+  - Critical failures occurred that would require a completely different approach
+  - The result provides little to no value for continuing with the overall mission
 
   ## Your Assessment
 
@@ -208,13 +251,16 @@ TASK_UPDATE_PLAN_PROMPT: |
 
   Evaluate whether the remaining task plan should be updated based on the progress made from completed tasks.
 
+  **CRITICAL REMINDER: The overall_task has a unique and definitive answer that exists. Do not choose "early_completion" unless you are absolutely certain the answer has been completely found and can be definitively provided. When in doubt, continue execution to ensure the correct answer is discovered.**
+
   ### Decision Criteria
 
-  **You should choose STOP when:**
-  - The overall mission has already been completed based on the work done in completed tasks
-  - The results from completed tasks fully satisfy the requirements of the overall task
-  - Continuing with remaining tasks would be redundant or unnecessary
-  - The overall task can be answered/delivered with the current progress
+  **You should choose EARLY_COMPLETION when:**
+  - The overall mission can be correctly answered based on the work done in completed tasks
+  - The results from completed tasks provide sufficient information to deliver a definitive answer to the overall task
+  - Continuing with remaining tasks would be redundant as the answer is already obtainable
+  - The overall task requirements are fully satisfied and can be answered with current progress
+  - **IMPORTANT: You are confident that the unique answer has been found and no further investigation is needed**
 
   **You should UPDATE the remaining plan when:**
   - Completed tasks revealed new information that makes remaining tasks suboptimal or incorrect
@@ -222,11 +268,18 @@ TASK_UPDATE_PLAN_PROMPT: |
   - Remaining tasks duplicate work already done in completed tasks
   - A more efficient approach for remaining work is now apparent
   - Dependencies between remaining tasks have changed
+  - **Task descriptions contain unclear references, pronouns, or indirect mentions that need clarification** - any task that relies on understanding what was found in previous steps should be rewritten with concrete details
+  - **Tasks use vague or contextual references that require knowledge of previous task results** - executors should be able to understand and complete each task without needing to reference what happened in earlier steps
+  - **Tasks need to be made completely self-contained and explicit** by replacing indirect references with specific, concrete information discovered in completed tasks
+  - **New information from completed tasks makes subsequent tasks unclear or overly complex** - requiring task decomposition into clearer, more manageable subtasks
+  - **Individual remaining tasks have become too broad or complex** after gaining new context, and should be broken down into smaller, more specific steps
 
   **You should CONTINUE with the current plan when:**
   - Remaining tasks are still appropriate and achievable
   - No new information changes the validity of the remaining approach
   - Current plan sequence remains logically sound for the overall mission
+  - **The unique answer to the overall task has not yet been definitively found**
+  - **Task descriptions are clear and self-contained without ambiguous references** - each task can be understood and executed independently without requiring knowledge of previous task results
 
   ### Update Guidelines
 
@@ -236,6 +289,9 @@ TASK_UPDATE_PLAN_PROMPT: |
   - Avoid duplicating work already accomplished
   - Keep tasks clear, specific, and achievable
   - Maintain logical sequence and dependencies
+  - **Replace vague references with specific, concrete information** discovered in completed tasks
+  - **Make each task self-contained and unambiguous** so executors understand exactly what to do without needing to reference previous task results
+  - **Clarify pronouns and indirect references** by replacing them with explicit names, values, or descriptions from completed tasks
 
   ## Response Format
 
@@ -243,11 +299,12 @@ TASK_UPDATE_PLAN_PROMPT: |
     - Summarize what has been accomplished in completed tasks
     - Assess whether the overall mission is already complete or if remaining tasks are still optimal given current progress
     - Identify any issues or improvements needed in the remaining plan
+    - **Check for unclear references, pronouns, or vague descriptions in remaining tasks that need clarification** - ensure each task is self-contained and can be understood without referencing previous task results
 
   2. **Decision in <choice></choice> tags:**
     - Use exactly "continue" if remaining plan needs no changes
     - Use exactly "update" if remaining plan should be modified
-    - Use exactly "stop" if the overall mission is already complete and remaining tasks are unnecessary
+    - Use exactly "early_completion" if the overall mission is already complete and remaining tasks are unnecessary
 
   3. **If "update", provide revised remaining tasks in <updated_unfinished_task_plan></updated_unfinished_task_plan> tags:**
   <updated_unfinished_task_plan>
@@ -256,7 +313,6 @@ TASK_UPDATE_PLAN_PROMPT: |
   </updated_unfinished_task_plan>
 
   Focus on practical improvements that enhance the success of completing the overall mission, or recognize when the mission is already complete.
-
 
 TASK_REFLECTION_PROMPT: |
   You attempted to complete the following task but were unsuccessful:
@@ -269,7 +325,7 @@ TASK_REFLECTION_PROMPT: |
   <task_execution_results>
   {task_results}
   </task_execution_results>
-
+  {additional_context}
   Please provide a comprehensive failure analysis that will help improve the task decomposition and execution strategy for the next attempt.
 
   ## Failure Analysis
@@ -311,7 +367,11 @@ TASK_REFLECTION_PROMPT: |
   Provide specific, actionable insights that directly inform better task decomposition and execution strategy.
 
 REFLECTION_FAILURE_PROMPT_1: |
-  Additional Context: Answer extraction resulted in {failure_reason}. The task execution results may be insufficient or ambiguous for determining a clear answer.
+  <failure_details>
+  Based on the task execution results above, a tentative answer "{tentative_answer}" was extracted. However, this answer failed to meet quality thresholds and is considered incorrect or incomplete. The specific reason for failure is: {failure_reason}. This indicates that while the subtasks may have gathered some information, the final answer synthesis or extraction process was flawed.
+  </failure_details>
 
 REFLECTION_FAILURE_PROMPT_2: |
-  Additional Context: Self-check failed for tentative answer: {tentative_answer}. The answer may not follow the correct format or process requirements.
+  <failure_details>
+  A self-check validation process was performed on the tentative answer "{tentative_answer}" derived from the task execution results. The self-check failed, indicating that the proposed answer does not meet the required standards. The answer may have issues with format compliance, completeness, accuracy, or adherence to specific process requirements. Detailed failure analysis: {failure_analysis}
+  </failure_details>
