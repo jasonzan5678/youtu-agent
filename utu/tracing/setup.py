@@ -37,8 +37,8 @@ def setup_otel_tracing(
         logger.warning("OpenTelemetry tracing is already set up! Skipping...")
         return
 
-    endpoint = endpoint or EnvUtils.get_env("PHOENIX_ENDPOINT", None)
-    project_name = project_name or EnvUtils.get_env("PHOENIX_PROJECT_NAME", None)
+    endpoint = endpoint or EnvUtils.get_env("PHOENIX_ENDPOINT", "")
+    project_name = project_name or EnvUtils.get_env("PHOENIX_PROJECT_NAME", "")
     if not endpoint or not project_name:
         logger.warning("PHOENIX_ENDPOINT or PHOENIX_PROJECT_NAME is not set! Skipping OpenTelemetry tracing.")
         set_tracing_disabled(True)  # we disable the openai's default tracing
@@ -47,7 +47,7 @@ def setup_otel_tracing(
     # https://arize.com/docs/phoenix/tracing/how-to-tracing/setup-tracing/custom-spans
     # create your key: https://app.phoenix.arize.com/s/_space_name_/settings/general
     if endpoint.startswith("https://app.phoenix.arize.com"):
-        api_key = EnvUtils.get_env("PHOENIX_API_KEY", None)
+        api_key = EnvUtils.get_env("PHOENIX_API_KEY", "")
         if not api_key:
             logger.warning(f"You use PHOENIX_ENDPOINT={endpoint} but PHOENIX_API_KEY is not set! Tracing may not work.")
         headers = {"Authorization": f"Bearer {api_key}"} if api_key else None

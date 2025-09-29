@@ -1,46 +1,95 @@
-"""
-- [ ] polish _execute_python_code_sync
-"""
-
 import asyncio
 import base64
 import contextlib
 import glob
 import io
 import os
-import pathlib
 import re
+import time
 import traceback
-import uuid
-from datetime import datetime
-from typing import TYPE_CHECKING
+from concurrent.futures import ProcessPoolExecutor, TimeoutError
+from typing import Dict
+import threading
+import queue
 
 import matplotlib
-import matplotlib.pyplot as plt
-from IPython.core.interactiveshell import InteractiveShell
-from traitlets.config.loader import Config
-
 matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 from ..config import ToolkitConfig
-from .base import AsyncBaseToolkit, register_tool
-
-if TYPE_CHECKING:
-    from IPython.core.history import HistoryManager
-    from traitlets.config.loader import Config as BaseConfig
-
-    class Config(BaseConfig):
-        HistoryManager: HistoryManager
-
+from .base import AsyncBaseToolkit
 
 # Used to clean ANSI escape sequences
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")
 
+class ProcessPoolManager:
+    _instance = None
+    _lock = threading.Lock()
+    
+    def __new__(cls, max_workers: int = None):
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+                cls._instance._init_manager(max_workers)
+            return cls._instance
+    
+    def _init_manager(self, max_workers: int):
+        if max_workers is None:
+            max_workers = 1
+        
+        self.max_workers = max_workers
+        self.available_processes = queue.Queue(maxsize=max_workers)
+        self.process_pools: Dict[int, ProcessPoolExecutor] = {}
+        self.lock = threading.Lock()
+        
+        for _ in range(max_workers):
+            executor = ProcessPoolExecutor(max_workers=1)
+            self.available_processes.put(executor)
+            self.process_pools[id(executor)] = executor
+    
+    def acquire_process(self) -> ProcessPoolExecutor:
+        try:
+            return self.available_processes.get(timeout=300)
+        except queue.Empty:
+            raise RuntimeError("No available processes in pool")
+    
+    def release_process(self, executor: ProcessPoolExecutor):
+        if id(executor) in self.process_pools:
+            try:
+                future = executor.submit(lambda: True)
+                future.result(timeout=1)
+                self.available_processes.put(executor)
+            except:
+                with self.lock:
+                    if id(executor) in self.process_pools:
+                        del self.process_pools[id(executor)]
+                        new_executor = ProcessPoolExecutor(max_workers=1)
+                        self.process_pools[id(new_executor)] = new_executor
+                        self.available_processes.put(new_executor)
+    
+    def shutdown(self):
+        with self.lock:
+            for executor in self.process_pools.values():
+                executor.shutdown(wait=False)
+            self.process_pools.clear()
+            while not self.available_processes.empty():
+                try:
+                    self.available_processes.get_nowait().shutdown(wait=False)
+                except:
+                    pass
 
-def _execute_python_code_sync(code: str, workdir: str):
+_process_manager = None
+
+def get_process_manager(max_workers: int = None) -> ProcessPoolManager:
+    global _process_manager
+    if _process_manager is None:
+        _process_manager = ProcessPoolManager(max_workers)
+    return _process_manager
+
+def _execute_python_code_sync(code: str, workdir: str, max_memory_MB: int):
     """
     Synchronous execution of Python code.
-    This function is intended to be run in a separate thread.
+    This function is intended to be run in a separate process.
     """
     original_dir = os.getcwd()
     try:
@@ -48,6 +97,17 @@ def _execute_python_code_sync(code: str, workdir: str):
         code_clean = code.strip()
         if code_clean.startswith("```python"):
             code_clean = code_clean.split("```python")[1].split("```")[0].strip()
+        
+        # memory limit
+        memory_limit_code = f"""
+import resource
+try:
+    memory_limit_bytes = {max_memory_MB} * 1024 * 1024
+    resource.setrlimit(resource.RLIMIT_AS, (memory_limit_bytes, memory_limit_bytes))
+except (ValueError, resource.error):
+    pass
+"""
+        code_clean = memory_limit_code + code_clean
 
         # Create and change to working directory
         os.makedirs(workdir, exist_ok=True)
@@ -57,6 +117,9 @@ def _execute_python_code_sync(code: str, workdir: str):
         files_before = set(glob.glob("*"))
 
         # Create a new IPython shell instance
+        from IPython.core.interactiveshell import InteractiveShell
+        from traitlets.config.loader import Config
+
         InteractiveShell.clear_instance()
 
         config = Config()
@@ -105,27 +168,22 @@ def _execute_python_code_sync(code: str, workdir: str):
                 shell.history_manager.enabled = False
                 shell.history_manager.end_session = lambda: None
             InteractiveShell.clear_instance()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             pass
 
-        success = True
-        if "Error" in stderr_result or ("Error" in stdout_result and "Traceback" in stdout_result):
-            success = False
-        message = "Code execution completed, no output"
-        if stdout_result.strip():
-            message = f"Code execution completed\nOutput:\n{stdout_result.strip()}"
-
         return {
-            "workdir": workdir,
-            "success": success,
-            "message": message,
+            "success": False
+            if "Error" in stderr_result or ("Error" in stdout_result and "Traceback" in stdout_result)
+            else True,
+            "message": f"Code execution completed\nOutput:\n{stdout_result.strip()}"
+            if stdout_result.strip()
+            else "Code execution completed, no output",
             "status": True,
             "files": new_files,
-            "error": stderr_result.strip(),
+            "error": stderr_result.strip() if stderr_result.strip() else "",
         }
-    except Exception as e:  # pylint: disable=broad-except
+    except Exception as e:
         return {
-            "workdir": workdir,
             "success": False,
             "message": f"Code execution failed, error message:\n{str(e)},\nTraceback:{traceback.format_exc()}",
             "status": False,
@@ -143,42 +201,46 @@ class PythonExecutorToolkit(AsyncBaseToolkit):
 
     def __init__(self, config: ToolkitConfig | dict | None = None):
         super().__init__(config)
+        max_workers = 32
+        self.process_manager = get_process_manager(max_workers)
 
-        workspace_root = self.config.config.get("workspace_root", None)
-        if workspace_root is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            unique_id = str(uuid.uuid4())[:8]
-            workspace_root = f"/tmp/utu/python_executor/{timestamp}_{unique_id}"
-        self.setup_workspace(workspace_root)
+    async def get_tools_map(self) -> dict[str, callable]:
+        return {
+            "execute_python_code": self.execute_python_code,
+        }
 
-    def setup_workspace(self, workspace_root: str):
-        workspace_dir = pathlib.Path(workspace_root)
-        workspace_dir.mkdir(parents=True, exist_ok=True)
-        self.workspace_root = workspace_root
-
-    @register_tool
-    async def execute_python_code(self, code: str, timeout: int = 30) -> dict:
+    async def execute_python_code(
+        self, code: str, workdir: str = "./run_workdir", timeout: int = 3, max_memory_MB: int = 512
+    ) -> dict:
         """
         Executes Python code and returns the output.
 
         Args:
             code (str): The Python code to execute.
-            timeout (int): The execution timeout in seconds. Defaults to 30.
+            workdir (str): The working directory for the execution. Defaults to "./run_workdir".
+            timeout (int): The execution timeout in seconds. Defaults to 3.
 
         Returns:
             dict: A dictionary containing the execution results.
         """
         loop = asyncio.get_running_loop()
+        starttime = time.time()
+        executor = None
+        
         try:
-            return await asyncio.wait_for(
+            executor = self.process_manager.acquire_process()
+            res = await asyncio.wait_for(
                 loop.run_in_executor(
-                    None,  # Use the default thread pool executor
+                    executor,
                     _execute_python_code_sync,
-                    code,
-                    str(self.workspace_root),
+                    code, 
+                    workdir, 
+                    max_memory_MB
                 ),
                 timeout=timeout,
             )
+            res["time"] = time.time() - starttime
+            return res
         except TimeoutError:
             return {
                 "success": False,
@@ -189,4 +251,20 @@ class PythonExecutorToolkit(AsyncBaseToolkit):
                 "output": "",
                 "files": [],
                 "error": f"Code execution timed out ({timeout} seconds)",
+                "time": time.time() - starttime
             }
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"Failed: {e}",
+                "stdout": "",
+                "stderr": "",
+                "status": False,
+                "output": "",
+                "files": [],
+                "error": str(traceback.format_exc()),
+                "time": time.time() - starttime
+            }
+        finally:
+            if executor is not None:
+                self.process_manager.release_process(executor)
