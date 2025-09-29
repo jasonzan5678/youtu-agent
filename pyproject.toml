@@ -78,6 +78,7 @@ gaia = [
     "validators>=0.35.0",
     "xls2xlsx>=0.2.0",
     "xmltodict>=0.15.0",
+    "sympy>=1.11.0",
 ]
 python-executor = [
     "chardet>=5.2.0",

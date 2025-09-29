@@ -19,7 +19,7 @@ TASK_EXECUTE_USER_PROMPT: |
   </task_description>
   </current_subtask>
 
-  Note: The overall task is <overall_task>, and you are currently working on the subtask <current_subtask>. Focus on completing this specific subtask while keeping the overall goal in mind.
+  Note: The overall task is <overall_task>, and you are currently working on the subtask <current_subtask>. Focus on completing this specific subtask while keeping the overall goal in mind. You only need to complete the current subtask, not the entire overall task.
 
 TASK_EXECUTE_WITH_REFLECTION_USER_PROMPT: |
   You have previously failed to complete this task. Now retry based on the failure experience  (Note that you have no ability to ask user for confirmation or help, just finish the task without asking or confirmation):
@@ -46,14 +46,18 @@ TASK_EXECUTE_WITH_REFLECTION_USER_PROMPT: |
   {previous_attempts}
   </previous_attempts_and_reflections>
 
-  Note: The overall task is <overall_task>, and you are currently working on the subtask <current_subtask>. Based on the above reflections, analyze the failure causes from previous attempts, identify what went wrong, and explore the correct path to complete this subtask successfully. Use the lessons learned to improve your approach and avoid repeating the same mistakes.
+  Note: The overall task is <overall_task>, and you are currently working on the subtask <current_subtask>. Based on the above reflections, analyze the failure causes from previous attempts, identify what went wrong, and explore the correct path to complete this subtask successfully. Use the lessons learned to improve your approach and avoid repeating the same mistakes. You only need to complete the current subtask, not the entire overall task.
 
 TASK_CHECK_PROMPT: |
-  Please carefully evaluate whether you have successfully completed the given task.
+  Please evaluate whether you have made sufficient progress on the given task to proceed to the next step.
 
-  <task_name>
-  {task_name}
-  </task_name>
+  <overall_task>
+  {overall_task}
+  </overall_task>
+
+  <current_task_name>
+  {current_task_name}
+  </current_task_name>
 
   <task_description>
   {task_description}
@@ -63,27 +67,40 @@ TASK_CHECK_PROMPT: |
   1. What was the specific objective of this task?
   2. What actions did you take to address this task?
   3. What results or outputs did you produce?
-  4. Do your results fully satisfy the task requirements?
-  5. Are there any remaining steps or aspects that still need to be completed?
+  4. Did you achieve the main objective or make substantial progress?
+  5. Is the result of reasonable quality and practically usable?
+  6. Does your work provide valuable information or capabilities for subsequent steps?
+  7. Does your work align with and contribute to the overall task?
 
-  Based on your reflection, determine whether the task has been completely finished. A task is considered complete only when all requirements have been fully met and no further action is needed.
+  Based on your reflection, determine whether the task was successful enough to proceed. A task is considered successful when:
+  - The main objective was achieved or substantially completed
+  - The output quality is reasonable and practically usable  
+  - The result provides useful information or capabilities for next steps
+  - Clear progress was made toward the overall goal, even if not perfect
+  - The work aligns with and contributes to the overall task
+
+  Note: You are completing this specific part of the overall task. Focus on whether this current task is complete - you don't need to consider other tasks within the overall task.
 
   Please provide your analysis and then answer with 'yes' or 'no' using the <task_check> tag:
-  - If the task is NOT fully completed, output <task_check>no</task_check>
-  - If the task IS fully completed, output <task_check>yes</task_check>
+  - If the task achieved sufficient progress and success, output <task_check>yes</task_check>
+  - If the task failed to make meaningful progress, output <task_check>no</task_check>
 
 TASK_REFLECTION_PROMPT: |
   You attempted to complete the following task but were unsuccessful:
 
-  <task_name>
-  {task_name}
-  </task_name>
+  <overall_task>
+  {overall_task}
+  </overall_task>
+
+  <current_task_name>
+  {current_task_name}
+  </current_task_name>
 
   <task_description>
   {task_description}
   </task_description>
 
-  Please reflect on your attempt and provide a concise analysis for future retry attempts.
+  Please reflect on your attempt and provide a concise analysis for future retry attempts. Consider how your approach aligned with the overall task and whether you maintained focus on the right objectives. Remember, you are completing this specific part of the overall task - focus on this current task without considering other tasks within the overall task.
 
   ## What Went Wrong
   - **Primary failure reason**: Why did your attempt fail?
@@ -94,10 +111,17 @@ TASK_REFLECTION_PROMPT: |
   - **Key insight**: What did you learn from this failure?
   - **Mistake to avoid**: What should not be repeated next time?
 
+  ## Reusable Information
+  - **Valid findings**: Any correct information, configurations, or data discovered during this attempt
+  - **Working components**: Specific code snippets, commands, or solutions that functioned correctly
+  - **Environmental insights**: System details, file locations, or setup information that can be reused
+
   ## Retry Strategy
   - **New approach**: How will you tackle this differently?
   - **Better tools/methods**: What should be prioritized in the retry?
   - **Success checkpoint**: How will you know you're making progress?
+
+  Keep your response focused and actionable. This reflection will guide your next attempt.
 
 # TASK_SUMMARY_SYSTEM_PROMPT: |
 #   Keep your response focused and actionable. This reflection will guide your next attempt.
@@ -116,8 +140,8 @@ TASK_SUMMARY_USER_PROMPT: |
   </task_description>
 
   Please provide a concise summary that includes:
-  1. Your initial answer or solution to the task
-  2. Any files that were created, modified, or generated during execution. If no files were created, skip this point.
+  1. **Most importantly**, your detailed final answer or solution to the task (this is the core deliverable)
+  2. If no files were created, skip this point. Otherwise, list any files that were created, modified, or generated during execution.
   3. Key results or outputs produced
   4. Important steps taken to complete the task
 

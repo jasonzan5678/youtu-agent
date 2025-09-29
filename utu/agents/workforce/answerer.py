@@ -38,7 +38,7 @@ class AnswererAgent:
         final_answer = answer_match.group(1).strip() if answer_match else response.strip()
 
         def _check(s: str, p: str) -> bool:
-            return s.startswith(p) or " " + p + " " in s or s.endswith(p)
+            return p.lower().strip() in s.lower().strip()
 
         confidence_pattern = r"<confidence>(.*?)</confidence>"
         confidence_match = re.search(confidence_pattern, response, re.DOTALL)
@@ -63,8 +63,12 @@ class AnswererAgent:
         """Check if model answer and ground truth are semantically equivalent using LLM."""
         raise NotImplementedError
 
-    async def answer_self_check(self, recorder: WorkforceTaskRecorder) -> bool:
-        """Self-check if the attempted answer follows correct format and process."""
+    async def answer_self_check(self, recorder: WorkforceTaskRecorder) -> tuple[bool, str]:
+        """Self-check if the attempted answer follows correct format and process.
+        
+        Returns:
+            tuple[bool, str]: (is_correct, failure_analysis)
+        """
         self_check_prompt = PROMPTS["ANSWER_SELF_CHECK_PROMPT"].format(
             question=recorder.overall_task,
             task_results="\n\n".join(recorder.formatted_task_plan_list_with_task_results),
@@ -72,8 +76,15 @@ class AnswererAgent:
         )
         self_check_recorder = await self.llm.run(self_check_prompt)
         recorder.add_run_result(self_check_recorder.get_run_result(), "answerer_self_check")  # add trajectory
+        
+        # Extract validation result
         correct_pattern = r"<correct>(.*?)</correct>"
         correct_match = re.search(correct_pattern, self_check_recorder.final_output, re.DOTALL)
-        if correct_match:
-            return correct_match.group(1).strip().lower() == "yes"
-        return False
+        is_correct = bool(correct_match and correct_match.group(1).strip().lower() == "yes")
+        
+        # Extract failure analysis
+        failure_analysis_pattern = r"<analysis>(.*?)</analysis>"
+        failure_analysis_match = re.search(failure_analysis_pattern, self_check_recorder.final_output, re.DOTALL)
+        failure_analysis = failure_analysis_match.group(1).strip() if failure_analysis_match else ""
+        
+        return is_correct, failure_analysis
