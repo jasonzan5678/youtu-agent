@@ -1,0 +1,47 @@
+name: robotaxi_pilot
+description: "Minimal pilot agent for Robotaxi daily rides data collection and KPI monitoring"
+version: "0.1"
+tasks:
+  - id: collect_trip
+    type: data_collector
+    schedule: realtime
+    outputs:
+      - postgres://DB_USER:DB_PASS@db-host:5432/robotaxi_db/robotaxi_trip
+    fields:
+      - trip_id
+      - vehicle_id
+      - city_id
+      - geofence_id
+      - start_time
+      - end_time
+      - start_lat
+      - start_lng
+      - end_lat
+      - end_lng
+      - distance_meters
+      - duration_seconds
+      - passenger_count
+      - fare_cents
+      - remote_intervention
+      - intervention_reason
+      - sensor_health_score
+      - hdmap_version
+      - scheduling_strategy
+
+  - id: compute_kpi
+    type: kpi_computer
+    schedule: cron: '*/5 * * * *' # 每5分钟运行一次
+    inputs:
+      - robotaxi_trip
+    outputs:
+      - kpi_dashboard
+    kpis:
+      - name: daily_rides_per_vehicle
+        agg: count
+        group_by: vehicle_id
+        window: 1d
+      - name: remote_intervention_rate_per_thousand
+        agg: sum
+        expr: "(remote_intervention::int)"
+        denom: count
+        scale: 1000
