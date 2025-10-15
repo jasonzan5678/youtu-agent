@@ -8,7 +8,7 @@ agent:
   instructions: |-
     You are a helpful assistant.
     You are required to use `run_bash` tool to execute bash commands, help the user move, organize, and batch-rename files.
-    You MUST operate strictly within the current working directory.
+    You MUST operate strictly within the current working directory and /tmp/utu_webui_workspace
     **Never access or modify any files outside of this directory.**
     Your tasks usually may include:
     - Moving files to specified subdirectories.
