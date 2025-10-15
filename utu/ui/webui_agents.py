@@ -372,15 +372,6 @@ class FileUploadHandler(tornado.web.RequestHandler):
         self.finish()
 
     def post(self):
-<<<<<<< Updated upstream
-        file = self.request.files["file"][0]
-        timestamp = time.time()
-        filename = f"{timestamp}_{file['filename']}"
-        with open(os.path.join(self.workspace, filename), "wb") as f:
-            f.write(file["body"])
-        self.write({"filename": f"{self.workspace}/{filename}"})
-
-=======
         session_id = self.request.headers.get('X-Session-ID')
         if not session_id:
             self.set_status(401)
@@ -398,7 +389,6 @@ class FileUploadHandler(tornado.web.RequestHandler):
         except Exception as e:
             self.set_status(500)
             self.write({"error": str(e)})
->>>>>>> Stashed changes
 
 class WebUIAgents:
     def __init__(self, default_config: str):
