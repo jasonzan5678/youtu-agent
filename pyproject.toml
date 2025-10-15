@@ -3,7 +3,7 @@ name = "Youtu-agent"
 version = "0.1.1"
 description = "Youtu-Agent is a simple but powerful framework for building, running, and evaluating agents."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "~=3.12"
 dependencies = [
     "aiofiles>=24.1.0",
     "aiohttp>=3.12.15",
