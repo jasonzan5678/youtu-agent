@@ -245,7 +245,10 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         # set workdir for bash tool
         for key, value in config.toolkits.items():
-            if key == "BashTool":
+            print(value)
+            if value.name == "bash":
+                value.config['workspace_root'] = self.session.workspace
+            if value.name == "python_executor":
                 value.config['workspace_root'] = self.session.workspace
 
         await self.instantiate_agent(config)
@@ -373,7 +376,7 @@ class FileUploadHandler(tornado.web.RequestHandler):
         filename = f"{timestamp}_{file['filename']}"
         with open(os.path.join(self.workspace, filename), "wb") as f:
             f.write(file["body"])
-        self.write({"filename": filename})
+        self.write({"filename": f"{self.workspace}/{filename}"})
 
 
 class WebUIAgents:

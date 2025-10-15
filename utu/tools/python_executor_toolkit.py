@@ -13,28 +13,28 @@ import re
 import traceback
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING
-
-import matplotlib
-import matplotlib.pyplot as plt
-from IPython.core.interactiveshell import InteractiveShell
-from traitlets.config.loader import Config
-
-matplotlib.use("Agg")
+import subprocess
 
 from ..config import ToolkitConfig
 from .base import AsyncBaseToolkit, register_tool
 
-if TYPE_CHECKING:
-    from IPython.core.history import HistoryManager
-    from traitlets.config.loader import Config as BaseConfig
-
-    class Config(BaseConfig):
-        HistoryManager: HistoryManager
-
 
 # Used to clean ANSI escape sequences
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")
+
+
+NSJAIL_PREFIX = """nsjail -q \
+    -Mo --user 0 --group 99999 \
+    -R /bin/ -R /lib/ -R /lib64/ \
+    -R /usr/ -R /sbin/ -T /dev \
+    -R /dev/urandom \
+    -R /tmp/utu_webui_workspace/ \
+    -R  /tmp/utu/python_executor/ \
+    -R /etc/alternatives  \
+    -D {} \
+    -E LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu \
+    -E PATH=/usr/local/bin:/usr/bin:/bin --keep_caps -- /usr/bin/python3 -
+"""
 
 
 def _execute_python_code_sync(code: str, workdir: str):
@@ -56,41 +56,16 @@ def _execute_python_code_sync(code: str, workdir: str):
         # Get file list before execution
         files_before = set(glob.glob("*"))
 
-        # Create a new IPython shell instance
-        InteractiveShell.clear_instance()
+        # run in nsjail
+        process = subprocess.Popen(NSJAIL_PREFIX.format(workdir), shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        stdout_data, stderr_data = process.communicate(input=code_clean.encode("utf-8"), timeout=5)
 
-        config = Config()
-        config.HistoryManager.enabled = False
-        config.HistoryManager.hist_file = ":memory:"
-
-        shell = InteractiveShell.instance(config=config)
-
-        if hasattr(shell, "history_manager"):
-            shell.history_manager.enabled = False
-
-        output = io.StringIO()
-        error_output = io.StringIO()
-
-        with contextlib.redirect_stdout(output), contextlib.redirect_stderr(error_output):
-            shell.run_cell(code_clean)
-
-            if plt.get_fignums():
-                img_buffer = io.BytesIO()
-                plt.savefig(img_buffer, format="png")
-                img_base64 = base64.b64encode(img_buffer.getvalue()).decode("utf-8")
-                plt.close()
-
-                image_name = "output_image.png"
-                counter = 1
-                while os.path.exists(image_name):
-                    image_name = f"output_image_{counter}.png"
-                    counter += 1
-
-                with open(image_name, "wb") as f:
-                    f.write(base64.b64decode(img_base64))
-
-        stdout_result = output.getvalue()
-        stderr_result = error_output.getvalue()
+        stdout_result = stdout_data.decode("utf-8")
+        stderr_result = stderr_data.decode("utf-8")
+        
+        # print("stdout_result: ", stdout_result)
+        # print("stderr_result: ", stderr_result)
 
         stdout_result = ANSI_ESCAPE.sub("", stdout_result)
         stderr_result = ANSI_ESCAPE.sub("", stderr_result)
@@ -98,15 +73,6 @@ def _execute_python_code_sync(code: str, workdir: str):
         files_after = set(glob.glob("*"))
         new_files = list(files_after - files_before)
         new_files = [os.path.join(workdir, f) for f in new_files]
-
-        try:
-            shell.atexit_operations = lambda: None
-            if hasattr(shell, "history_manager") and shell.history_manager:
-                shell.history_manager.enabled = False
-                shell.history_manager.end_session = lambda: None
-            InteractiveShell.clear_instance()
-        except Exception:  # pylint: disable=broad-except
-            pass
 
         success = True
         if "Error" in stderr_result or ("Error" in stdout_result and "Traceback" in stdout_result):
