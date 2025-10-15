@@ -145,6 +145,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         self.create_session()
 
         content = self._get_current_agent_content()
+        content["session_id"] = self.session.session_id
         await self.send_event(Event(type="init", data=InitContent(**content)))
 
     async def send_event(self, event: Event):
@@ -371,6 +372,7 @@ class FileUploadHandler(tornado.web.RequestHandler):
         self.finish()
 
     def post(self):
+<<<<<<< Updated upstream
         file = self.request.files["file"][0]
         timestamp = time.time()
         filename = f"{timestamp}_{file['filename']}"
@@ -378,6 +380,25 @@ class FileUploadHandler(tornado.web.RequestHandler):
             f.write(file["body"])
         self.write({"filename": f"{self.workspace}/{filename}"})
 
+=======
+        session_id = self.request.headers.get('X-Session-ID')
+        if not session_id:
+            self.set_status(401)
+            self.write({"error": "Session ID required"})
+            return
+        
+        try:
+            file = self.request.files["file"][0]
+            timestamp = time.time()
+            filename = f"{timestamp}_{file['filename']}"
+            full_path = os.path.join(self.workspace, session_id, filename)
+            with open(full_path, "wb") as f:
+                f.write(file["body"])
+            self.write({"filename": full_path})
+        except Exception as e:
+            self.set_status(500)
+            self.write({"error": str(e)})
+>>>>>>> Stashed changes
 
 class WebUIAgents:
     def __init__(self, default_config: str):
